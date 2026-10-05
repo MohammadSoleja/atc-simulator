@@ -1,0 +1,75 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ATC Simulator</title>
+  <link rel="stylesheet" href="{% static 'simulator/css/game.css' %}">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <div><span class="brand">ATC SIMULATOR</span><span class="sector">EGLL APPROACH</span></div>
+    <div class="top-stats">
+      <span>TIME <b id="clock">00:00</b></span>
+      <span>WIND <b>270/10</b></span>
+      <span>SCORE <b id="score">0</b></span>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <section class="radar-wrap">
+      <canvas id="radar" width="1100" height="760"></canvas>
+      <div id="alertBanner" class="alert-banner hidden"></div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Traffic</h2>
+        <div class="metrics">
+          <div><span>Arrivals</span><b id="arrivalCount">0</b></div>
+          <div><span>Departures</span><b id="departureCount">0</b></div>
+          <div><span>Landings</span><b id="landings">0</b></div>
+          <div><span>Handoffs</span><b id="handoffs">0</b></div>
+          <div><span>Violations</span><b id="violations">0</b></div>
+          <div><span>Missed</span><b id="missed">0</b></div>
+        </div>
+      </section>
+
+      <section class="panel strips-panel">
+        <div class="panel-title-row"><h2>Flight strips</h2><button id="spawnBtn">Add traffic</button></div>
+        <div id="strips" class="strips"></div>
+      </section>
+
+      <section class="panel help">
+        <h2>Commands</h2>
+        <p><code>BAW123 H 270</code> heading</p>
+        <p><code>BAW123 A 4000</code> altitude</p>
+        <p><code>BAW123 S 180</code> speed</p>
+        <p><code>BAW123 D BPK</code> direct fix</p>
+        <p><code>BAW123 L 27L</code> land</p>
+        <p><code>BAW123 T</code> takeoff</p>
+        <p><code>BAW123 G</code> go around</p>
+        <p>Commands can be chained.</p>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="console">
+    <div id="message" class="message">System ready. Select an aircraft or type a command.</div>
+    <form id="commandForm" autocomplete="off">
+      <span>&gt;</span>
+      <input id="commandInput" autofocus spellcheck="false" placeholder="BAW123 H 270 A 4000 S 180">
+      <button type="submit">SEND</button>
+    </form>
+    <div class="controls">
+      <button id="pauseBtn">Pause</button>
+      <button id="restartBtn">Restart</button>
+      <label>Traffic <select id="trafficRate"><option value="22">Low</option><option value="14" selected>Normal</option><option value="8">High</option></select></label>
+    </div>
+  </footer>
+</div>
+<script src="{% static 'simulator/js/game.js' %}"></script>
+</body>
+</html>
