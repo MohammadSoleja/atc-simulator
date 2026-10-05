@@ -44,14 +44,21 @@
 
       <section class="panel help">
         <h2>Commands</h2>
-        <p><code>BAW123 H 270</code> heading</p>
-        <p><code>BAW123 A 4000</code> altitude</p>
+        <p><code>BAW123 C 270</code> heading</p>
+        <p><code>BAW123 C 010</code> heading 10°</p>
+        <p><code>BAW123 C 3</code> altitude 3,000 ft</p>
+        <p><code>BAW123 C 4000</code> altitude in feet</p>
         <p><code>BAW123 S 180</code> speed</p>
-        <p><code>BAW123 D BPK</code> direct fix</p>
+        <p><code>BAW123 C CPT</code> direct fix</p>
         <p><code>BAW123 L 27L</code> land</p>
+        <p>Runways: 09L / 27R, 09R / 27L.</p>
         <p><code>BAW123 T</code> takeoff</p>
+        <p><code>BAW123 C 5 R 27L T</code> departure</p>
+        <p><code>R 27L</code> assigns a runway before takeoff.</p>
+        <p>△ RNAV fix · ○ radio aid · ◎ NDB</p>
         <p><code>BAW123 G</code> go around</p>
-        <p>Commands can be chained.</p>
+        <p>1–2 digits: altitude × 1,000 ft.<br>001–360: heading. Above 360: feet.</p>
+        <p><code>BAW123 C 3 C 270 S 180</code></p>
       </section>
     </aside>
   </main>
@@ -60,13 +67,14 @@
     <div id="message" class="message">System ready. Select an aircraft or type a command.</div>
     <form id="commandForm" autocomplete="off">
       <span>&gt;</span>
-      <input id="commandInput" autofocus spellcheck="false" placeholder="BAW123 H 270 A 4000 S 180">
+      <input id="commandInput" autofocus spellcheck="false" placeholder="BAW123 C 3 C 270 S 180">
       <button type="submit">SEND</button>
     </form>
     <div class="controls">
       <button id="pauseBtn">Pause</button>
       <button id="restartBtn">Restart</button>
       <label>Traffic <select id="trafficRate"><option value="22">Low</option><option value="14" selected>Normal</option><option value="8">High</option></select></label>
+      <label>Pace <select id="simulationRate"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option></select></label>
     </div>
   </footer>
 </div>
