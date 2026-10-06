@@ -23,7 +23,7 @@ Then open `http://127.0.0.1:8000/`.
 - Direct-to navigation fixes
 - Takeoff and landing clearances
 - Go-arounds
-- Traffic spawning and traffic-rate controls
+- Gradual traffic spawning
 - 3 NM / 1,000 ft separation monitoring
 - Conflict warnings
 - Landing, handoff, violation and missed-arrival scoring
@@ -72,9 +72,9 @@ Departures require an explicit runway assignment with `R` (or `RWY`). Choose
 stay in the flight strips while waiting and appear on radar after takeoff clearance.
 
 Sessions start with one arrival. Automatic traffic intervals gradually decrease
-from three times the selected interval to the normal interval over five minutes.
-Pause/Resume stays visible in the command console. Strips and desktop command
-help scroll independently while the game fits the browser viewport.
+from twice the Normal interval (30 seconds) to the normal interval over five unpaused playing minutes, independent of simulation pace. The arrival/departure mix follows the airport clock; automatic arrivals are capped at five active aircraft, with at most two waiting departures.
+The Add traffic button remains a manual override.
+Pause/Resume stays visible in the command console. Flight strips scroll independently while the game fits the browser viewport. Help opens a dialog and pauses play.
 
 
 RNAV fixes DONNA, DORKI, HILLY and NIGIT use coordinates from
@@ -84,9 +84,28 @@ These are direct-to navigation points, without SID/STAR or fly-by route modellin
 
 ## Speed and simulation pace
 
-Pace defaults to 4×; choose 1×, 2×, 4× or 8×. Movement, turns, climbs, spawning,
-clock and separation checks all advance at the same simulation rate. At 1×,
-180 kt covers 3 NM per minute. Small update steps preserve checks at faster pace.
+Normal (2×) remains the default gameplay baseline. Header buttons select 1×,
+Normal (2×), 4× or 8×; restart restores Normal. Aircraft movement, turns, climbs
+and separation checks scale together. Traffic timing also scales relative to
+Normal, preserving its previous buildup and caps. At 1×, 180 kt covers 3 NM per
+real minute. Small update steps preserve checks at faster pace.
+
+The airport clock starts at 06:00 local airport time, shows HH:MM and wraps daily.
+It advances two seconds per real second at Normal, one second at 1×, four at
+4× and eight at 8×. It is intentionally separate from aircraft simulation time;
+pause and Help freeze both. This is a repeatable simulated day, not the computer's
+current time or a date/DST model.
+
+Heathrow-inspired traffic patterns follow
+[Heathrow's night schedule](https://www.heathrow.com/company/local-community/noise/operations/night-flights)
+and its documented [06:00–07:00 arrival peak](https://www.heathrow.com/company/local-community/noise/operations/runway-alternation).
+05:05–06:00 has quieter arrival-only traffic; 06:00–07:00 is arrival-heavy;
+07:00–22:40 is mixed; 22:40–22:55 has quieter arrival-only traffic; overnight
+has no automatic scheduled traffic. Ratios (75% arrivals in the morning, 50%
+during daytime) and reduced density are gameplay approximations, not measured
+hourly traffic or a live flight schedule. Existing airborne traffic continues
+and manual Add traffic still overrides spawning. Runway assignments remain
+under controller control.
 
 Speed commands use simplified type-specific game envelopes:
 
@@ -106,3 +125,96 @@ They are not certified performance limits or configuration/weight-dependent stal
 speeds. The simulation uses one speed value for command/display and movement;
 it does not yet distinguish indicated, true and ground speed or model wind.
 Out-of-range/non-numeric speed commands are rejected with the accepted range.
+
+Airborne speed changes are limited to 0.6 kt per simulation second. A 240→180 kt
+clearance takes 100 simulation seconds (50 playing seconds at 2×). Takeoff-roll
+acceleration uses 3 kt per simulation second. These are simplified gameplay rates.
+
+
+## Landing clearances and readbacks
+
+Landing clearance requires an airborne arrival at or below 3,000 ft, heading
+within 60° of the runway direction. Position is not an acceptance condition.
+Vector the aircraft to intercept the extended centreline, then issue `L 27L`
+(or another runway end). Clearance does not automatically route an aircraft
+from any arbitrary position. The strip shows AWAITING INTERCEPT, then FINAL.
+A turn-radius allowance helps capture an angled interception; captured traffic
+follows an approximate 3° glide path with type-specific final approach speed.
+Nearly aligned aircraft can capture within a 0.2 NM centreline corridor; final guidance tracks a point ahead on the centreline instead of chasing the threshold. Touchdown can occur along the usable runway, with position, heading and altitude checks.
+If the aircraft never intercepts the approach centreline, it continues on its
+interception heading without automatic descent or go-around, including when
+clearance was issued after crossing the centreline. A captured approach that reaches the far end of the runway without landing goes around to 3,000 ft.
+
+Commands read back their actual instructions, for example:
+`SVA111 C 3 C NIGIT S 180` →
+“SVA111: descend and maintain 3,000 ft, head direct to NIGIT, speed 180 kt.”
+Climb/descend/maintain depends on the current altitude. Landing feedback reports
+clearance, centreline capture, touchdown, or the reason a clearance is rejected.
+
+## Map presentation
+
+The Thames now uses an extracted local subset of [OS Open Rivers](https://www.ordnancesurvey.co.uk/products/os-open-rivers), April 2026, transformed from British National Grid into the same geographic projection as the airport and navigation aids. Contains OS data © Crown copyright and database right 2026, supplied under the [Open Government Licence v3](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/).
+Urban outlines remain coarse public-domain [Natural Earth](https://www.naturalearthdata.com/) data (`ne_10m_urban_areas.geojson`). These are simplified geographic context, not detailed terrain or an aviation chart. Regional vectors are bundled in `simulator/static/simulator/js/map-data.js`; gameplay requires no map service or GIS library.
+
+The map is fixed at Close (1.4×), with Normal (2×) as the default simulation pace.
+The uniform projection is preserved: airport, fixes and aircraft share coordinates;
+zoom never changes speeds or separation distances. Place names are omitted.
+Aircraft labels show callsign plus altitude in hundreds of feet, climb/descent/level
+indicator, and speed in tens of knots; strips retain full values.
+Dashed extended centrelines show the 25 NM approach capture range.
+
+Instructions are accessed through Help. Opening it pauses simulation and closing
+it (including Escape) restores the previous pause state. UI theme remains selectable
+and does not change the map colours.
+
+Heading changes use a simplified coordinated-turn model limited to 25° bank or
+3°/s, whichever gives the slower turn, with gradual roll-in and rollout. This uses
+one simplified airspeed value and is not a full flight dynamics model. Based on
+[FAA Instrument Flying Handbook](https://www.faa.gov/sites/faa.gov/files/pilots/FAA-H-8083-15B.pdf)
+and [FAA turn guidance](https://www.faa.gov/air_traffic/publications/aim_html/chap5_section_3.html).
+
+
+The desktop traffic panel is 200 px wide (190 px on narrower desktop screens),
+with compact counters and scrollable strips. Runways are intentionally enlarged
+chart symbols for readability; their centres remain geographic, while takeoff,
+landing and approach capture continue to use the original runway coordinates.
+The unfilled wind compass is drawn in the map's lower-right corner before aircraft
+and labels, at low opacity, and never intercepts selection clicks.
+
+## Simulation regression checks
+
+If Node.js is available, run `node tests/simulation.cjs`. This isolated test harness
+checks command readbacks, all four runway approaches, near-aligned localizer
+capture, touchdown beyond the threshold, missed interceptions, scoring, gradual
+turns, pause and speed/clock/traffic behaviour. It does not add a frontend build
+step or expose test controls in the game.
+
+
+Normal aircraft dynamics now run 20% faster, uniformly scaling movement, turns,
+altitude and speed changes; indicated speeds and aircraft envelopes are unchanged.
+The airport clock advances two minutes per real minute at Normal. Automatic traffic has a 30-second
+base interval, with the existing gradual buildup, time-of-day mix and caps.
+A narrow separation exception applies only to an established final within 3 NM,
+at/below 1,000 ft and within 0.1 NM of its centreline, paired with a ground takeoff
+roll on a different parallel runway in the same direction. It stops at liftoff.
+Same-runway conflicts, go-arounds, overhead and other airborne aircraft remain
+subject to the normal separation checks. This is a gameplay rule, not a complete
+real-world parallel runway separation model.
+
+
+Scheduled traffic appears in dashed preview strips 30 Normal playing seconds
+before activation. The same callsign, type and planned arrival altitude or
+requested departure fix are retained. Pending traffic is not selectable, is not
+counted as active and does not move or trigger separation alerts. Countdown time
+pauses with the simulation, scales with selected speed, and resets on restart.
+Manual Add traffic remains immediate. Departure trails and radar labels use blue;
+arrival targets use white. Selection and conflict highlights retain amber/red.
+
+Two arrivals established on final to different parallel runways in the same
+ direction are also exempt from pairwise separation alerts. Both must have
+captured the approach, remain within 0.1 NM of their own centreline and within
+10 degrees of runway heading, and be inside the approach/runway corridor.
+Clearance alone does not qualify. Same-runway, opposite-direction, crossing
+traffic and go-arounds retain normal checks. This is a simplified gameplay
+exception; real simultaneous approaches have procedure-specific requirements
+(FAA AIM, section 5-4).

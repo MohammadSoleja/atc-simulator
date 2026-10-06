@@ -6,13 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ATC Simulator</title>
   <link rel="stylesheet" href="{% static 'simulator/css/game.css' %}">
+  <script src="{% static 'simulator/js/theme.js' %}"></script>
 </head>
 <body>
 <div class="app-shell">
   <header class="topbar">
     <div><span class="brand">ATC SIMULATOR</span><span class="sector">EGLL APPROACH</span></div>
     <div class="top-stats">
-      <span>TIME <b id="clock">00:00</b></span>
+      <span>TIME <b id="clock">06:00</b></span>
+      <div class="speed-buttons" role="group" aria-label="Simulation speed">
+        <button type="button" data-speed="1" aria-pressed="false">1×</button>
+        <button type="button" data-speed="2" aria-pressed="true">Normal (2×)</button>
+        <button type="button" data-speed="4" aria-pressed="false">4×</button>
+        <button type="button" data-speed="8" aria-pressed="false">8×</button>
+      </div>
       <span>WIND <b>270/10</b></span>
       <span>SCORE <b id="score">0</b></span>
     </div>
@@ -42,8 +49,29 @@
         <div id="strips" class="strips"></div>
       </section>
 
-      <section class="panel help">
-        <h2>Commands</h2>
+
+    </aside>
+  </main>
+
+  <footer class="console">
+    <div id="message" class="message">System ready. Select an aircraft or type a command.</div>
+    <form id="commandForm" autocomplete="off">
+
+      <input aria-label="ATC command" id="commandInput" autofocus spellcheck="false" placeholder="BAW123 C 3 C 270 S 180">
+      <button type="submit">Go</button>
+    </form>
+    <div class="controls">
+      <button id="pauseBtn">Pause</button>
+      <button id="restartBtn">Restart</button>
+      <button id="themeBtn" type="button">Dark theme</button>
+      <button id="helpBtn" type="button">Help</button>
+    </div>
+  </footer>
+</div>
+<dialog id="helpDialog" class="help-dialog">
+  <div class="panel-title-row"><h2>Simulator help</h2><button id="closeHelpBtn" type="button">Close</button></div>
+      <section class="help">
+        <h3>Commands</h3>
         <p><code>BAW123 C 270</code> heading</p>
         <p><code>BAW123 C 010</code> heading 10°</p>
         <p><code>BAW123 C 3</code> altitude 3,000 ft</p>
@@ -60,24 +88,16 @@
         <p>1–2 digits: altitude × 1,000 ft.<br>001–360: heading. Above 360: feet.</p>
         <p><code>BAW123 C 3 C 270 S 180</code></p>
       </section>
-    </aside>
-  </main>
-
-  <footer class="console">
-    <div id="message" class="message">System ready. Select an aircraft or type a command.</div>
-    <form id="commandForm" autocomplete="off">
-      <span>&gt;</span>
-      <input id="commandInput" autofocus spellcheck="false" placeholder="BAW123 C 3 C 270 S 180">
-      <button type="submit">SEND</button>
-    </form>
-    <div class="controls">
-      <button id="pauseBtn">Pause</button>
-      <button id="restartBtn">Restart</button>
-      <label>Traffic <select id="trafficRate"><option value="22">Low</option><option value="14" selected>Normal</option><option value="8">High</option></select></label>
-      <label>Pace <select id="simulationRate"><option value="1">1×</option><option value="2">2×</option><option value="4" selected>4×</option><option value="8">8×</option></select></label>
-    </div>
-  </footer>
-</div>
+  <p>Select an aircraft to fill in its callsign. Commands can be chained.</p>
+  <p>Normal (2×) is the default gameplay pace. The clock shows airport time from 06:00 and advances two minutes per real minute at Normal; 1× halves that rate, 4× doubles it, 8× quadruples it. Pause and Help stop both clock and aircraft.</p>
+  <p>Dashed flight strips preview scheduled traffic 30 seconds before activation (at Normal). Countdown pauses with the game and scales with speed. Departures are blue on radar; arrivals are white. Amber marks selection and red marks conflicts.</p>
+  <p>Traffic is arrival-heavy from 06:00–07:00, mixed during the day and quieter late at night. This is a simplified Heathrow-inspired pattern, with gradual buildup and traffic caps.</p>
+  <p>Landing: heading within 60° of the runway direction, altitude at or below 3,000 ft. Vector onto the dashed extended centreline before the threshold; clearance alone does not turn the aircraft toward the runway. A late or non-intersecting clearance can miss the approach.</p>
+  <p>Radar labels: altitude in hundreds of feet, ↑ climb / ↓ descent / = level, speed in tens of knots. Flight strips show full values.</p>
+  <p>Maintain 3 NM lateral or 1,000 ft vertical separation. Departures need altitude and runway assignments before takeoff.</p>
+  <p class="map-credit">Map: OS Open Rivers (Contains OS data © Crown copyright and database right 2026), Natural Earth urban areas. Navigation aids and runways: UK AIP. Map is simplified for gameplay.</p>
+</dialog>
+<script src="{% static 'simulator/js/map-data.js' %}"></script>
 <script src="{% static 'simulator/js/game.js' %}"></script>
 </body>
 </html>

@@ -43,3 +43,108 @@ html, body { overflow: hidden; }
   .panel-title-row button { font-size: 10px; }
   .controls { flex-wrap: wrap; gap: 6px; }
 }
+
+/* Civil aviation palette: quiet map, bright strips, clear command console. */
+:root { --bg:#203f4c; --panel:#f4f7fa; --line:#d5e0e8; --green:#24617d; --dim:#647f90; --amber:#bd7922; --red:#b33e48; --text:#233b4c; }
+html, body { background:#edf2f6; font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+.topbar { background:#fff; height:52px; box-shadow:0 1px 6px #153e5010; }
+.brand { letter-spacing:.04em; font-size:15px; }
+.sector { font-size:12px; }
+.top-stats { font-size:12px; font-variant-numeric:tabular-nums; }
+.radar-wrap { background:var(--bg); }
+.panel h2 { letter-spacing:.04em; font-weight:600; color:#456173; }
+.metrics div { background:#fff; border-color:#dce5ec; border-radius:5px; }
+.metrics span { color:#647e8e; }
+.panel-title-row button, .controls button, .console form button { background:#e7eff5; border-color:#cbdce7; border-radius:5px; color:#285e7a; }
+button:hover { filter:brightness(.96); }
+button:focus-visible, select:focus-visible { outline:2px solid #3d8eb8; outline-offset:2px; }
+.strip { background:#fff; border-color:#d6e2eb; border-radius:6px; padding:10px; box-shadow:0 1px 3px #183e5010; }
+.strip.selected { border-color:#388cb5; box-shadow:0 0 0 1px #388cb5 inset; }
+.strip .callsign { color:#214c65; }
+.strip.arrival .kind { color:#a76f27; }
+.strip.departure .kind { color:#3b78a0; }
+.strip-bottom { color:#607e90; }
+.help p { color:#617b8c; }
+.help code, .console input { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+.console { background:#fff; }
+.message { color:#5b7586; }
+.message.ok { color:#285e7a; }
+.console input { background:#f5f8fb; border-color:#c9dbe7; color:#24485d; border-radius:6px; }
+.console input:focus { border-color:#4d97bd; }
+.console form button { background:#286b8e; color:#fff; border-color:#286b8e; padding:9px 16px; }
+.controls { color:#5c7687; }
+.controls select { background:#f4f7fa; color:#294d64; border-color:#ccdde8; border-radius:4px; }
+.alert-banner { background:#fff0f0; color:#9c3540; border-color:#d67e85; border-radius:6px; }
+#strips, .help { scrollbar-color:#b2c7d5 transparent; scrollbar-width:thin; }
+@media(max-width:650px) { .brand { font-size:11px; } .top-stats { font-size:10px; } }
+
+/* UI-only dark theme. Canvas/map colours stay independent of the theme. */
+html[data-theme="dark"] { color-scheme: dark; --panel:#1c2b36; --line:#364957; --green:#9ecde5; --dim:#9ab3c3; --text:#e1ebf2; --red:#ff9aab; }
+html[data-theme="dark"], html[data-theme="dark"] body { background:#17252f; }
+[data-theme="dark"] .topbar, [data-theme="dark"] .console { background:#17252f; }
+[data-theme="dark"] .panel h2 { color:#b6cad8; }
+[data-theme="dark"] .metrics div, [data-theme="dark"] .strip { background:#233440; border-color:#3a505f; }
+[data-theme="dark"] .metrics span, [data-theme="dark"] .strip-bottom, [data-theme="dark"] .help p, [data-theme="dark"] .controls, [data-theme="dark"] .message { color:#b0c5d2; }
+[data-theme="dark"] .strip .callsign { color:#e3eff7; }
+[data-theme="dark"] .strip.arrival .kind { color:#f0c484; }
+[data-theme="dark"] .strip.departure .kind { color:#9bcaf0; }
+[data-theme="dark"] .strip.selected { border-color:#80badb; box-shadow:0 0 0 1px #80badb inset; }
+[data-theme="dark"] .panel-title-row button, [data-theme="dark"] .controls button { background:#2c4352; border-color:#486477; color:#d4e8f5; }
+[data-theme="dark"] .controls select, [data-theme="dark"] .console input { background:#233440; border-color:#486477; color:#e1ebf2; }
+[data-theme="dark"] .console input::placeholder { color:#97b0c1; }
+[data-theme="dark"] .message.ok { color:#b7d8ec; }
+[data-theme="dark"] .alert-banner { background:#422b35; color:#ffd4dc; border-color:#b97384; }
+[data-theme="dark"] #strips, [data-theme="dark"] .help { scrollbar-color:#546e80 transparent; }
+
+/* Compact command desk; instructions live in a modal, leaving room for strips. */
+.console { display:grid; grid-template-columns:minmax(230px,380px) minmax(0,1fr); gap:6px 16px; }
+.message { grid-column:1/-1; margin:0; }
+.console input { padding:5px 8px; font-size:12px; }
+.console form button { padding:5px 10px; font-size:12px; }
+.controls { margin:0; flex-wrap:wrap; gap:8px; }
+.help-dialog { width:min(540px,90vw); max-height:85dvh; padding:20px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--text); overflow:auto; font-size:13px; line-height:1.5; }
+.help-dialog::backdrop { background:#10233199; }
+.help-dialog h2 { margin:0; font-size:18px; }
+.help-dialog h3 { margin:10px 0; font-size:14px; }
+.help-dialog .help p { font-size:13px; }
+.help-dialog button { padding:5px 10px; border:1px solid var(--line); border-radius:4px; background:var(--panel); color:var(--text); cursor:pointer; }
+.help-dialog .map-credit { font-size:10px; color:var(--dim); }
+@media(max-width:650px) { .console { grid-template-columns:1fr; } .message { grid-column:1; } }
+
+/* Normal is always the 2× baseline; speed controls sit beside the clock. */
+.top-stats { align-items:center; gap:14px; }
+.speed-buttons { display:flex; gap:3px; }
+.speed-buttons button { font:inherit; font-size:11px; padding:4px 7px; border:1px solid var(--line); border-radius:4px; background:var(--panel); color:var(--text); cursor:pointer; white-space:nowrap; }
+.speed-buttons button[aria-pressed="true"] { background:#286b8e; border-color:#286b8e; color:#fff; }
+@media(max-width:900px) { .top-stats { gap:8px; } }
+@media(max-width:650px) {
+  .topbar { height:auto; min-height:66px; flex-wrap:wrap; padding:7px 8px; gap:6px; }
+  .top-stats { width:100%; justify-content:space-between; gap:4px; }
+  .speed-buttons button { font-size:10px; padding:3px 5px; }
+}
+
+/* Slim traffic desk gives the radar most of the horizontal space. */
+.workspace { grid-template-columns:minmax(0,1fr) 200px; }
+.panel { padding:9px; }
+.panel h2 { font-size:10px; margin-bottom:6px; }
+.metrics { gap:3px 8px; }
+.metrics div { padding:3px 0; border:0; background:transparent; border-radius:0; align-items:center; }
+.metrics span { font-size:10px; }
+.metrics b { font-size:12px; }
+[data-theme="dark"] .metrics div { background:transparent; }
+.panel-title-row { gap:4px; margin-bottom:6px; }
+.panel-title-row button { font-size:10px; padding:4px 5px; }
+.panel-title-row h2 { margin:0; }
+.strips { gap:4px; }
+.strip { padding:7px; border-radius:3px; box-shadow:none; font-size:12px; }
+.strip-bottom { font-size:10px; margin-top:4px; gap:4px; }
+@media(max-width:900px) { .workspace { grid-template-columns:minmax(0,1fr) 190px; } }
+@media(max-width:650px) {
+  .workspace { grid-template-columns:minmax(0,1fr); }
+  .sidebar { grid-template-columns:130px minmax(0,1fr); }
+  .metrics { grid-template-columns:1fr; gap:1px; }
+  .panel { padding:7px; }
+}
+
+.strip.upcoming { border-style:dashed; opacity:0.75; cursor:default; }
+.upcoming-countdown { font-variant-numeric:tabular-nums; color:var(--green); }
