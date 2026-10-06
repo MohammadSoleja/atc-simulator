@@ -59,7 +59,9 @@
 
       <input aria-label="ATC command" id="commandInput" autofocus spellcheck="false" placeholder="BAW123 C 3 C 270 S 180">
       <button type="submit">Go</button>
+      <button id="voiceBtn" type="button" aria-pressed="false" title="Hold Q or hold this button to speak">Hold Q · Mic</button>
     </form>
+    <div id="voiceStatus" class="voice-status" role="status">Hold Q to speak. Release to review; Enter to submit.</div>
     <div class="controls">
       <button id="pauseBtn">Pause</button>
       <button id="restartBtn">Restart</button>
@@ -89,6 +91,7 @@
         <p><code>BAW123 C 3 C 270 S 180</code></p>
       </section>
   <p>Select an aircraft to fill in its callsign. Commands can be chained.</p>
+  <p>Voice: hold Q or the Mic button and speak a callsign followed by instructions. Live speech appears in the command box; release to translate, then check and press Enter. Example: “Speedbird one two three, descend and maintain three thousand, reduce speed to one eight zero, heading two seven zero.” Airline names, spelled letters and phonetic letters are supported. Use “direct Whiskey Oscar Delta” for WOD. Microphone permission is required; your browser may send audio to its speech recognition service. Voice support depends on the browser.</p>
   <p>Normal (2×) is the default gameplay pace. The clock shows airport time from 06:00 and advances two minutes per real minute at Normal; 1× halves that rate, 4× doubles it, 8× quadruples it. Pause and Help stop both clock and aircraft.</p>
   <p>Dashed flight strips preview scheduled traffic 30 seconds before activation (at Normal). Countdown pauses with the game and scales with speed. Departures are blue on radar; arrivals are white. Amber marks selection and red marks conflicts.</p>
   <p>Traffic is arrival-heavy from 06:00–07:00, mixed during the day and quieter late at night. This is a simplified Heathrow-inspired pattern, with gradual buildup and traffic caps.</p>
@@ -99,5 +102,6 @@
 </dialog>
 <script src="{% static 'simulator/js/map-data.js' %}"></script>
 <script src="{% static 'simulator/js/game.js' %}"></script>
+<script src="{% static 'simulator/js/voice.js' %}"></script>
 </body>
 </html>

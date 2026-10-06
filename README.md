@@ -218,3 +218,35 @@ Clearance alone does not qualify. Same-runway, opposite-direction, crossing
 traffic and go-arounds retain normal checks. This is a simplified gameplay
 exception; real simultaneous approaches have procedure-specific requirements
 (FAA AIM, section 5-4).
+
+### Voice command prototype
+
+Hold Q (including when the command input is focused), or hold the Mic button,
+to speak. Live transcription is shown in the input. Release to finish recognition
+and translate it into an editable command draft. Enter/Go remains the only way
+to issue the command; recognition never submits automatically. Escape cancels,
+and leaving the window stops listening. Unknown callsigns, fixes or instructions
+block submission until manually corrected or recorded again.
+
+Examples: “Speedbird one two three, descend and maintain three thousand, reduce
+speed to two five zero, direct Whiskey Oscar Delta” and “Sierra Victor Alpha one
+one one, increase speed two five zero, heading zero nine zero”. Callsigns must
+match active aircraft; upcoming strips do not qualify. Airline names, NATO
+phonetics, spelled letters, digit-by-digit numbers and common number words are
+supported. Flight level thirty becomes 3,000 ft; the informal “flight level three
+thousand” is accepted as 3,000 ft for this simulator.
+
+Uses browser SpeechRecognition with en-GB and interim results, with no added
+backend or API key. Browser support and recognition accuracy vary. Microphone
+permission is needed; the browser's recognition service may process audio
+remotely. Unsupported browsers retain typed commands and show a voice status.
+Run `node tests/voice.cjs` for translator and mocked recognition lifecycle tests.
+Actual microphone accuracy must be tested manually in a supported browser.
+
+Voice regression cases include AAL798 spoken as “Alpha Alpha Lima 798”,
+comma-formatted 3,000, joined “Lima798”, and the observed NIGIT transcription
+“niner indigo golf indigo tango”. Indigo is accepted as I and niner/nine as N
+only when the complete identifier matches a known navigation fix. Niner remains
+9 in numeric instructions and callsigns. The standard spelling for NIGIT is
+“November India Golf India Tango”. These are translator corrections; browser
+speech-to-text accuracy still depends on actual microphone testing.

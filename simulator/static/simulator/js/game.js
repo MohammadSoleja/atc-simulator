@@ -548,6 +548,7 @@
   window.addEventListener('resize',resize);
   new ResizeObserver(resize).observe(canvas.parentElement);
   canvas.addEventListener('click',e=>{const r=canvas.getBoundingClientRect(),mx=((e.clientX-r.left)*canvas.width/r.width-mapView.left)/(mapWidth*mapView.scale),my=((e.clientY-r.top)*canvas.height/r.height-mapView.top)/(mapHeight*mapView.scale);let best=null,bd=20;for(const a of state.aircraft){if(a.phase==='holding')continue;const d=Math.hypot((a.x-mx)*mapWidth*mapView.scale,(a.y-my)*mapHeight*mapView.scale);if(d<bd){best=a;bd=d}}if(best)selectAircraft(best)});
+  window.getVoiceContext=()=>({callsigns:state.aircraft.filter(a=>!a.landed).map(a=>a.callsign),fixes:fixes.map(f=>f.id),runways:runways.map(r=>r.id)});
   form.addEventListener('submit',e=>{e.preventDefault();parseCommand(input.value);input.value='';});
   document.getElementById('pauseBtn').onclick=()=>{state.paused=!state.paused;document.getElementById('pauseBtn').textContent=state.paused?'Resume':'Pause'};
   const helpDialog=document.getElementById('helpDialog');
