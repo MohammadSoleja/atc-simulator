@@ -29,7 +29,7 @@ function createEngine(sourcePath) {
   const startup='  reset();resize();renderStrips();requestAnimationFrame(frame);';
   let source=fs.readFileSync(sourcePath || path.join(__dirname,'../simulator/static/simulator/js/game.js'),'utf8');
   if(!source.includes(startup))throw Error('Engine startup changed; update test harness hooks.');
-  source=source.replace(startup,'globalThis.engine={reset,parseCommand,update,spawnArrival,spawnDeparture,cleanup,runways,fixes,distance,checkSeparation,trafficPattern,timeOfDaySeconds,setSimulationRate,getSimulationRate:()=>simulationRate,updateUI,renderStrips,runwayPosition,airport,profile,getState:()=>state}; reset();');
+  source=source.replace(startup,'globalThis.engine={reset,parseCommand,update,advanceSimulation,spawnArrival,spawnDeparture,cleanup,runways,fixes,distance,checkSeparation,trafficPattern,timeOfDaySeconds,setSimulationRate,getSimulationRate:()=>simulationRate,updateUI,renderStrips,runwayPosition,airport,profile,getState:()=>state}; reset();');
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../simulator/static/simulator/js/airlines.js'),'utf8'),context);
   vm.runInContext(source,context);
   return {engine:context.engine,element,context};
