@@ -22,7 +22,7 @@
     ['SIA','Singapore Airlines','Singapore',[]],
     ['CPA','Cathay Pacific','Cathay',[]],
     ['THY','Turkish Airlines','Turkish',[]],
-    ['FIN','Finnair','Finnair',['finn air']],
+    ['FIN','Finnair','Finnair',['finn air','fin air','thin air']],
     ['SWR','Swiss International Air Lines','Swiss',['swiss airlines','swiss international airlines']],
     ['QFA','Qantas','Qantas',['qantas airways']],
     ['ACA','Air Canada','Air Canada',[]],

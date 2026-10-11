@@ -263,6 +263,11 @@ backend or API key. Browser support and recognition accuracy vary. Microphone
 permission is needed; the browser's recognition service may process audio
 remotely. Unsupported browsers retain typed commands and show a voice status.
 Run `node tests/voice.cjs` for translator and mocked recognition lifecycle tests.
+The grouped transcript corpus is `tests/voice-transcripts.json`. Live recognition
+appears in the command box and status line; release Q to review the draft.
+Settings → Download voice log exports the last 100 attempts from the current tab, including
+transcripts, alternatives, drafts and errors. It clears on reload. See the
+[voice review checklist](docs/voice-review.md).
 Actual microphone accuracy must be tested manually in a supported browser.
 
 Voice regression cases include AAL798 spoken as “Alpha Alpha Lima 798”,

@@ -97,7 +97,7 @@ html[data-theme="dark"], html[data-theme="dark"] body { background:#17252f; }
 [data-theme="dark"] #strips, [data-theme="dark"] .help { scrollbar-color:#546e80 transparent; }
 
 /* Compact command desk; instructions live in a modal, leaving room for strips. */
-.console { display:grid; grid-template-columns:minmax(230px,380px) minmax(0,1fr); gap:6px 16px; }
+.console { display:grid; grid-template-columns:minmax(230px,380px) minmax(0,1fr) auto; gap:6px 16px; }
 .message { grid-column:1/-1; margin:0; }
 .console input { padding:5px 8px; font-size:12px; }
 .console form button { padding:5px 10px; font-size:12px; }
@@ -109,7 +109,13 @@ html[data-theme="dark"], html[data-theme="dark"] body { background:#17252f; }
 .help-dialog .help p { font-size:13px; }
 .help-dialog button { padding:5px 10px; border:1px solid var(--line); border-radius:4px; background:var(--panel); color:var(--text); cursor:pointer; }
 .help-dialog .map-credit { font-size:10px; color:var(--dim); }
-@media(max-width:650px) { .console { grid-template-columns:1fr; } .message { grid-column:1; } }
+@media(max-width:1000px) {
+  .console { grid-template-columns:minmax(230px,380px) minmax(0,1fr); }
+}
+@media(max-width:650px) {
+  .console { grid-template-columns:1fr; }
+  .message { grid-column:1; }
+}
 
 /* Normal is always the 2× baseline; speed controls sit beside the clock. */
 .top-stats { align-items:center; gap:14px; }
@@ -150,6 +156,10 @@ html[data-theme="dark"], html[data-theme="dark"] body { background:#17252f; }
 .upcoming-countdown { font-variant-numeric:tabular-nums; color:var(--green); }
 
 .voice-status { font-size:11px; line-height:1.3; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--green); margin-top:3px; }
+.console { position:relative; }
+.console .controls { grid-column:3; grid-row:2; justify-content:flex-end; flex-wrap:nowrap; }
+@media(max-width:1000px) { .console .controls { grid-column:1/-1; grid-row:3; flex-wrap:wrap; } }
+@media(max-width:650px) { .console .controls { grid-row:4; } }
 #voiceBtn { white-space:nowrap; font-size:11px; }
 #voiceBtn[aria-pressed="true"] { background:#a34444; color:white; }
 #voiceBtn:disabled { opacity:0.5; cursor:not-allowed; }
