@@ -14,8 +14,12 @@ python manage.py runserver
 Then open `http://127.0.0.1:8000/` for the welcome page and click **Start game**.
 The simulator is also available directly at `http://127.0.0.1:8000/play/`.
 
-The welcome page is a simple introduction with a Heathrow session entry point.
-Map selection and the full quick-start guide are separate follow-up tickets.
+The welcome page offers map selection (currently London Heathrow only) and an
+optional quick-start guide covering commands, arrivals, departures, separation,
+pace controls and voice input. Start game opens `/play/?map=egll`; `/play/`
+still defaults to Heathrow. Unavailable map identifiers return HTTP 404.
+The welcome page does not start the simulation, and playing requires no account.
+Light/dark preferences are shared with the simulator.
 
 Run `python manage.py test simulator` to check the welcome and simulator routes.
 
