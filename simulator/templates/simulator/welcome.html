@@ -21,7 +21,14 @@
         <p class="eyebrow">EGLL · United Kingdom</p>
         <h2 id="airport-title">London Heathrow</h2>
         <p>Two parallel runways. A busy London approach. Start with a manageable flow of aircraft and build your rhythm as traffic arrives.</p>
-        <a class="start-button" href="{% url 'index' %}">Start game <span aria-hidden="true">→</span></a>
+        <form action="{% url 'index' %}" method="get" class="map-selection">
+          <label for="mapSelect">Choose your map</label>
+          <select id="mapSelect" name="map">
+            {% for map in maps %}<option value="{{ map.id }}">{{ map.name }} ({{ map.code }})</option>{% endfor %}
+          </select>
+          <p class="map-note">Heathrow is the first playable map. More airports will follow.</p>
+          <button class="start-button" type="submit">Start game <span aria-hidden="true">→</span></button>
+        </form>
         <p class="session-note">Starts a new session. No account required.</p>
       </div>
       <div class="scope-preview" aria-hidden="true">
@@ -38,7 +45,44 @@
         <span>Heathrow approach</span>
       </div>
     </section>
-    <p class="getting-started">New to the desk? Open <strong>Help</strong> inside the simulator for commands and instructions. You can pause at any time.</p>
+    <section class="quick-start" aria-labelledby="quick-start-title">
+      <div class="guide-heading"><h2 id="quick-start-title">Your first few instructions</h2><span>No need to memorise everything</span></div>
+      <p>Select a map and start whenever you’re ready. Your job is to sequence arrivals, release departures and keep traffic separated. <strong>Help</strong> inside the game pauses the simulation while you check the commands.</p>
+      <details>
+        <summary>Quick-start guide &amp; command examples</summary>
+        <div class="guide-content">
+          <h3>1. Select an aircraft and give an instruction</h3>
+          <p>Click a radar target or flight strip to put its callsign in the command box. Type instructions and press <strong>Enter</strong> or <strong>Go</strong>. Replace BAW123 in these examples with an active aircraft’s callsign.</p>
+          <div class="command-table-wrap"><table class="command-table">
+            <thead><tr><th scope="col">Command</th><th scope="col">What it does</th></tr></thead>
+            <tbody>
+              <tr><td><code>BAW123 C 3</code></td><td>Climb or descend to 3,000 ft.</td></tr>
+              <tr><td><code>BAW123 C 270</code></td><td>Turn to heading 270°.</td></tr>
+              <tr><td><code>BAW123 C 090</code></td><td>Turn to heading 090°. Use three digits for headings.</td></tr>
+              <tr><td><code>BAW123 S 180</code></td><td>Set speed to 180 knots, within the aircraft’s limits.</td></tr>
+              <tr><td><code>BAW123 C WOD</code></td><td>Fly direct to the WOD navigation fix.</td></tr>
+              <tr><td><code>BAW123 L 27L</code></td><td>Clear an arrival to land on runway 27L.</td></tr>
+              <tr><td><code>BAW123 G</code></td><td>Instruct an arrival to go around.</td></tr>
+            </tbody>
+          </table></div>
+          <p>You can chain instructions: <code>BAW123 C 3 C 270 S 180</code> assigns 3,000 ft, heading 270° and 180 knots. With <code>C</code>, one or two digits mean thousands of feet, exactly three digits from 001–360 mean heading, and numbers above 360 mean feet.</p>
+          <h3>2. Sequence an arrival</h3>
+          <p>Arrivals hold their assigned altitude until you change it. Use heading, altitude and speed instructions to bring the aircraft onto a runway approach. Runways 27L/27R face 270°; 09L/09R face 090°.</p>
+          <p>For landing clearance, the aircraft must be at or below 3,000 ft and heading within 60° of the runway direction. Its path must intercept the dashed extended centreline <strong>before the runway</strong>. Clearance alone does not turn it onto final. Once the approach is captured, it follows the runway and descends automatically. The strip shows <strong>AWAITING INTERCEPT</strong> or <strong>FINAL</strong>.</p>
+          <h3>3. Release a departure</h3>
+          <p>Waiting departures appear in the strips. Assign an altitude and runway, then clear takeoff: <code>BAW123 C 5 R 27L T</code> assigns 5,000 ft and runway 27L, then clears takeoff.</p>
+          <p>Once airborne, route it toward the requested <strong>FIX</strong> shown on its strip, for example <code>BAW123 C CPT</code>. Waiting aircraft appear on radar once cleared for takeoff.</p>
+          <h3>4. Keep aircraft separated</h3>
+          <p>Aim for at least <strong>3 NM horizontally or 1,000 ft vertically</strong>. Red targets and the separation banner identify conflicts, which reduce your score. The simulator has narrow exceptions for established operations on separate parallel runways; crossing traffic and same-runway conflicts remain monitored.</p>
+          <h3>5. Control the pace</h3>
+          <p><strong>Normal (2×)</strong> is the default. Use 1× to slow down, or 4×/8× to speed up. Pause stops aircraft and the airport clock; Resume continues. Restart begins a new session. Upcoming strips give advance notice before aircraft become active.</p>
+          <h3>Optional: speak your instructions</h3>
+          <p>Hold <strong>Q</strong> or the <strong>Mic</strong> button to speak. Your words appear live. Release to create a command draft, check it, then press Enter or Go. Nothing is submitted automatically.</p>
+          <p>Example: “Speedbird one two three, descend and maintain three thousand, speed one eight zero, heading two seven zero.” This becomes <code>BAW123 C 3 S 180 C 270</code>. Use “direct Whiskey Oscar Delta” for WOD. <strong>Info</strong> lists airline names and phonetic callsigns.</p>
+          <p>Voice needs microphone permission and a supported browser. You can always type instead. The browser’s speech service may process audio remotely.</p>
+        </div>
+      </details>
+    </section>
   </main>
   <footer>Built for learning and play.</footer>
 </body>

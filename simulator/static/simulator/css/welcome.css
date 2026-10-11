@@ -48,3 +48,32 @@ html[data-theme="dark"] { color-scheme:dark; --text:#e1ebf2; --muted:#b0c5d2; --
   .scope-preview { padding:10px 24px 16px; }
   .scope-preview svg { max-width:260px; }
 }
+
+/* Map selection and guide use native controls; no welcome-page JS required. */
+.map-selection { margin-top:20px; }
+.map-selection label { display:block; font-weight:600; font-size:13px; margin-bottom:6px; }
+.map-selection select { width:100%; max-width:360px; padding:10px; font:inherit; font-size:14px; color:var(--text); background:#f4f7fa; border:1px solid var(--line); border-radius:5px; }
+.map-selection select:focus-visible, summary:focus-visible { outline:2px solid #3d8eb8; outline-offset:3px; }
+.map-note { color:var(--muted); font-size:12px; margin:8px 0 0; }
+button.start-button { font:inherit; font-weight:600; border:0; cursor:pointer; }
+.quick-start { margin-top:32px; }
+.guide-heading { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 20px; }
+.guide-heading h2 { font-size:22px; margin:0; }
+.guide-heading span, .quick-start > p { color:var(--muted); font-size:13px; }
+.quick-start details { background:white; border:1px solid var(--line); border-radius:8px; }
+.quick-start summary { cursor:pointer; padding:16px 20px; font-weight:600; color:var(--accent); }
+.guide-content { padding:0 20px 20px; font-size:14px; }
+.guide-content h3 { font-size:16px; margin:24px 0 8px; }
+.guide-content p { margin:8px 0 14px; }
+.guide-content code { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; background:#edf2f6; padding:2px 4px; border-radius:3px; overflow-wrap:anywhere; }
+.command-table-wrap { overflow-x:auto; }
+.command-table { width:100%; border-collapse:collapse; text-align:left; font-size:13px; }
+.command-table th, .command-table td { padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+.command-table td:first-child { min-width:145px; }
+[data-theme="dark"] .map-selection select, [data-theme="dark"] .guide-content code { background:#233440; }
+[data-theme="dark"] .quick-start details { background:#1c2b36; }
+@media(max-width:600px) {
+  .quick-start summary { padding:14px; }
+  .guide-content { padding:0 14px 14px; }
+  .command-table th, .command-table td { padding:8px 4px; }
+}
