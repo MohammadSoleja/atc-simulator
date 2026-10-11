@@ -280,6 +280,25 @@ speech-to-text accuracy still depends on actual microphone testing.
 
 ### Airline catalogue and Info
 
+V04 catalogue checks: run `node tests/airlines.cjs` for alias collisions,
+Info/translator parity and every airline alias across Heathrow's fixes.
+
+### Spoken pilot readbacks
+
+Submitted typed and voice commands receive queued browser speech-synthesis
+readbacks. Replies use the catalogue's radio callsigns and repeat accepted
+instructions. A rejected later clause reports its reason and any earlier
+instructions that were already applied. Unknown callsigns receive text system
+feedback. Untranslated speech only gets “say again” for a known callsign when
+Enter/Go is attempted; recording and drafting never trigger replies.
+
+Settings includes mute and volume controls, remembered locally when browser
+storage is available, plus speaking pace and an English voice selector. Default
+speech is 20% faster. Optional entry greetings, fix reports/requests and handoff
+farewells can be disabled separately. Push-to-talk cancels current and queued pilot speech;
+restart also clears it. Unsupported audio retains all text command feedback.
+Run `node tests/readbacks.cjs` and see [pilot voice playtest](docs/pilot-readbacks.md).
+
 `airlines.js` is the shared list of 26 traffic airlines, airline-name/radio-name
 voice aliases, ICAO codes, spelled letters and phonetic spellings. Info beside
 Help displays the same list and pauses the simulation, restoring the prior pause
@@ -301,3 +320,20 @@ checked against active callsigns, navigation fixes and runway identifiers. Only
 one distinct valid alternative becomes a draft; competing commands are blocked.
 The status shows when an alternative was used. Recognition services may return
 fewer or no alternatives, and microphone accuracy is still a manual test.
+
+### Local security and repository hygiene
+
+Keep the development server bound to `127.0.0.1`. Default allowed hosts are
+`localhost`, `127.0.0.1`, and `[::1]`; arbitrary hostnames are rejected.
+Local debug mode uses a random per-process secret. Before future deployment,
+set `DJANGO_DEBUG=false`, a private `DJANGO_SECRET_KEY`, and explicit
+comma-separated `DJANGO_ALLOWED_HOSTS`. Environment variables are read directly;
+`.env` files are not automatically loaded. Production HTTPS configuration and
+Django's deployment checks still need completing when hosting is introduced.
+
+Virtual environments, Python caches, IDE settings, local databases, logs, and
+`.env` files stay on your computer and are excluded from Git. Install dependencies
+from `requirements.txt` in a virtual environment; the Django minimum includes
+current 5.2 security patches. Browser speech recognition may send microphone
+audio to the browser provider. The simulator's downloadable voice log contains
+transcripts and is kept only in tab memory until you explicitly download it.

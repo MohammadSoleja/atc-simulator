@@ -1,0 +1,25 @@
+# Python environments and generated files
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local settings, credentials and data
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.sqlite3
+*.sqlite3-*
+*.log
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+
+# Collected deployment assets
+/staticfiles/
