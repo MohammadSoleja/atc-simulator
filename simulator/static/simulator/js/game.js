@@ -541,7 +541,8 @@
       d.onclick=()=>selectAircraft(a);stripsEl.appendChild(d);
     }
     for(const flight of state.upcoming){
-      const seconds=Math.max(0,Math.ceil(flight.dueAt-state.trafficElapsed));
+      // Small update steps can leave an exact second just above an integer.
+      const seconds=Math.max(0,Math.ceil(flight.dueAt-state.trafficElapsed-1e-7));
       const strip=document.createElement('div');strip.className=`strip upcoming ${flight.kind}`;
       strip.innerHTML=`<div class="strip-top"><span class="callsign">${flight.callsign}</span><span class="kind">${flight.kind==='arrival'?'ARR':'DEP'}</span></div><div class="strip-bottom"><span>${flight.type}</span><span>${flight.kind==='arrival'?flight.altitude+'ft':flight.exitFix}</span></div><div class="strip-bottom upcoming-countdown">Coming in ${seconds}s · not active yet</div>`;
       stripsEl.appendChild(strip);
@@ -601,12 +602,16 @@
   document.getElementById('spawnBtn').onclick=()=>{Math.random()<.7?spawnArrival():spawnDeparture();renderStrips()};
 
   let last=performance.now(),stripTimer=0;
-  function frame(now){
-    const dt=Math.min(.1,(now-last)/1000);last=now;
+  // One real-time step shared by the animation loop and isolated timing tests.
+  function advanceSimulation(dt){
     const rate=simulationRate;
     // Accelerate the entire simulation uniformly, using small steps for approach/separation checks.
     let remaining=dt*rate*GAMEPLAY_PACE;
     while(remaining>0){const step=Math.min(.05,remaining);update(step,step/GAMEPLAY_PACE);cleanup();remaining-=step;}
+  }
+  function frame(now){
+    const dt=Math.min(.1,(now-last)/1000);last=now;
+    advanceSimulation(dt);
     draw();updateUI();stripTimer+=dt;if(stripTimer>.7){renderStrips();stripTimer=0}requestAnimationFrame(frame);
   }
   reset();resize();renderStrips();requestAnimationFrame(frame);

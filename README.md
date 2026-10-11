@@ -82,7 +82,7 @@ Departures require an explicit runway assignment with `R` (or `RWY`). Choose
 stay in the flight strips while waiting and appear on radar after takeoff clearance.
 
 Sessions start with one arrival. Automatic traffic intervals gradually decrease
-from twice the Normal interval (30 seconds) to the normal interval over five unpaused playing minutes, independent of simulation pace. The arrival/departure mix follows the airport clock; automatic arrivals are capped at five active aircraft, with at most two waiting departures.
+from twice the Normal interval (30 seconds) to the normal interval over five unpaused minutes at Normal. Buildup and preview timers advance proportionally with the selected pace. The arrival/departure mix follows the airport clock; automatic arrivals are capped at five active aircraft, with at most two waiting departures.
 The Add traffic button remains a manual override.
 Pause/Resume stays visible in the command console. Flight strips scroll independently while the game fits the browser viewport. Help opens a dialog and pauses play.
 
@@ -97,7 +97,7 @@ These are direct-to navigation points, without SID/STAR or fly-by route modellin
 Normal (2×) remains the default gameplay baseline. Header buttons select 1×,
 Normal (2×), 4× or 8×; restart restores Normal. Aircraft movement, turns, climbs
 and separation checks scale together. Traffic timing also scales relative to
-Normal, preserving its previous buildup and caps. At 1×, 180 kt covers 3 NM per
+Normal, preserving its previous buildup and caps. Including the 20% gameplay adjustment, at 1×, 180 kt covers 3.6 NM per
 real minute. Small update steps preserve checks at faster pace.
 
 The airport clock starts at 06:00 local airport time, shows HH:MM and wraps daily.
@@ -137,7 +137,7 @@ it does not yet distinguish indicated, true and ground speed or model wind.
 Out-of-range/non-numeric speed commands are rejected with the accepted range.
 
 Airborne speed changes are limited to 0.6 kt per simulation second. A 240→180 kt
-clearance takes 100 simulation seconds (50 playing seconds at 2×). Takeoff-roll
+clearance takes 100 simulation seconds (about 42 playing seconds at Normal, including the 20% gameplay adjustment). Takeoff-roll
 acceleration uses 3 kt per simulation second. These are simplified gameplay rates.
 
 
@@ -192,6 +192,11 @@ The unfilled wind compass is drawn in the map's lower-right corner before aircra
 and labels, at low opacity, and never intercepts selection clicks.
 
 ## Simulation regression checks
+
+For G04, run `node tests/traffic.cjs` to check a complete airport day,
+operating-hours boundaries, buildup, preview identity/countdowns, pause/dialogs,
+all four paces and automatic caps. See the [traffic review and playtest
+checklist](docs/traffic-balance.md). Difficulty approval remains a manual playtest.
 
 For G01–G03, run `node tests/core.cjs` for focused landing, separation and
 departure/handoff acceptance scenarios. See [core gameplay rules and playtest
