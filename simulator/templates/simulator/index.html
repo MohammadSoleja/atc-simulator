@@ -67,6 +67,7 @@
       <button id="restartBtn">Restart</button>
       <button id="themeBtn" type="button">Dark theme</button>
       <button id="helpBtn" type="button">Help</button>
+      <button id="infoBtn" type="button">Info</button>
     </div>
   </footer>
 </div>
@@ -100,8 +101,17 @@
   <p>Maintain 3 NM lateral or 1,000 ft vertical separation. Departures need altitude and runway assignments before takeoff.</p>
   <p class="map-credit">Map: OS Open Rivers (Contains OS data © Crown copyright and database right 2026), Natural Earth urban areas. Navigation aids and runways: UK AIP. Map is simplified for gameplay.</p>
 </dialog>
+<dialog id="infoDialog" class="help-dialog info-dialog" aria-labelledby="infoTitle">
+  <div class="panel-title-row"><h2 id="infoTitle">Airlines &amp; voice callsigns</h2><button id="closeInfoBtn" type="button">Close</button></div>
+  <p>Say any listed name or spelling, followed by the flight number. Example: “American Airlines seven nine eight” or “Alpha Alpha Lima seven nine eight”. The aircraft must be active. Names are case-insensitive; number digits can be spoken or written.</p>
+  <table class="airline-table"><thead><tr><th scope="col">Code</th><th scope="col">Airline</th><th scope="col">Accepted ways to refer to it</th></tr></thead><tbody id="airlineInfoRows"></tbody></table>
+  <p>These airlines can appear in simulator traffic. The mix is for gameplay, rather than a live Heathrow schedule. Closing Info restores your previous pause state.</p>
+  <p class="map-credit">Codes and radio callsigns: <a href="https://www.faa.gov/air_traffic/publications/atpubs/cnt_html/chap3_section_1.html" target="_blank" rel="noopener">FAA callsign directory</a>. Full names and additional spellings are simulator aliases.</p>
+</dialog>
+<script src="{% static 'simulator/js/airlines.js' %}"></script>
 <script src="{% static 'simulator/js/map-data.js' %}"></script>
 <script src="{% static 'simulator/js/game.js' %}"></script>
+<script src="{% static 'simulator/js/info.js' %}"></script>
 <script src="{% static 'simulator/js/voice.js' %}"></script>
 </body>
 </html>

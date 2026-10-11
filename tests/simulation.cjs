@@ -7,7 +7,9 @@ function element(id) {
     width: 1100, height: 760, value: id === 'trafficRate' ? '22' : '',
     scrollTop: 0, classList: {add(){},remove(){}},
     parentElement: {getBoundingClientRect: () => ({width:1100,height:760})},
-    addEventListener(){}, focus(){}, appendChild(){}, getContext: () => ({})
+    handlers: {}, addEventListener(type,fn){this.handlers[type]=fn;},
+    showModal(){this.open=true;},close(){this.open=false;this.handlers.close?.();},
+    focus(){}, appendChild(){}, getContext: () => ({})
   });
   return elements.get(id);
 }
@@ -19,6 +21,7 @@ let source = fs.readFileSync(process.argv[2] || require('node:path').resolve(__d
 // Expose the real engine only inside this isolated verification harness.
 source = source.replace('  reset();resize();renderStrips();requestAnimationFrame(frame);',
   '  globalThis.engine={reset,parseCommand,update,spawnArrival,spawnDeparture,cleanup,runways,fixes,distance,checkSeparation,trafficPattern,timeOfDaySeconds,setSimulationRate,getSimulationRate:()=>simulationRate,updateUI,getState:()=>state}; reset();');
+vm.runInContext(fs.readFileSync('simulator/static/simulator/js/airlines.js','utf8'),context);
 vm.runInContext(source, context);
 const engine = context.engine;
 
@@ -214,3 +217,14 @@ for(const scenario of ['same runway','not captured','off centreline','turning','
 const finals=parallelFinalPair();engine.checkSeparation();finals[1].approachCaptured=false;
 engine.checkSeparation();assert.equal(engine.getState().violations,1,'leaving final restores separation immediately');
 console.log('PASS: established parallel finals in both directions, same runway/crossing/go-around conflicts and immediate restoration.');
+
+for(const initiallyPaused of [false,true]){
+ engine.reset();engine.getState().paused=initiallyPaused;
+ element('infoBtn').onclick();assert.equal(engine.getState().paused,true,'Info pauses simulation');
+ assert.equal(element('infoDialog').open,true);
+ element('closeInfoBtn').onclick();assert.equal(engine.getState().paused,initiallyPaused,'Info restores prior pause state');
+}
+const catalogue=context.window.ATC_AIRLINES;
+vm.runInContext('Math.random=()=>0.99',context);engine.reset();
+assert.ok(catalogue.some(a=>engine.getState().aircraft[0].callsign.startsWith(a.code)));
+console.log('PASS: Info pause restoration and traffic using shared airline catalogue.');

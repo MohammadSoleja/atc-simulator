@@ -3,11 +3,13 @@ const elements={},listeners={},instances=[];
 function element(id){return elements[id]??=( {value:'',textContent:'',open:false,handlers:{},addEventListener(type,fn){this.handlers[type]=fn;},setAttribute(name,value){this[name]=value;},focus(){},setPointerCapture(){}} );}
 class Recognition {constructor(){instances.push(this);}start(){}stop(){this.stopped=true;}abort(){this.onend();}}
 const context={window:{SpeechRecognition:Recognition,addEventListener(){}},document:{getElementById:element,addEventListener(type,fn){listeners[type]=fn;}}};
-vm.createContext(context);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/voice.js','utf8'),context);
-const vocabulary={callsigns:['SVA111','BAW123','AAL798','KLM713','VIR636','VIR153'],fixes:['WOD','CPT','NIGIT'],runways:['27L','27R','09L','09R']};
+vm.createContext(context);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/airlines.js','utf8'),context);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/voice.js','utf8'),context);
+const vocabulary={callsigns:['SVA111','BAW123','AAL798','KLM713','VIR636','VIR153','UAE501'],fixes:['WOD','CPT','NIGIT','HEN'],runways:['27L','27R','09L','09R']};
 context.window.getVoiceContext=()=>vocabulary;
 const translate=text=>context.window.ATCVoice.translate(text,vocabulary);
 for(const [spoken,expected] of [
+ ['Emirates 501 descend and maintain flight levels 3,000 speed 250 heading hotel echo November','UAE501 C 3 S 250 C HEN'],
+ ['Emirates five zero one maintain flight levels three zero','UAE501 C 3'],
  ['VIR153 descendant maintain flight level 3,000 speed 250 heading 090','VIR153 C 3 S 250 C 090'],
  ['VIR153 descendant and maintain three thousand','VIR153 C 3'],
  ['VIR153 cleared for landing runway zero nine ride','VIR153 L 09R'],
@@ -53,5 +55,26 @@ listeners.keydown({code:'KeyQ',preventDefault(){}});const bad=instances.at(-1);b
 prevented=false;element('commandForm').handlers.submit({preventDefault(){prevented=true;},stopImmediatePropagation(){}});assert.equal(prevented,true,'unrecognised speech blocked');
 input.value='SVA111 C WOD';input.handlers.input();prevented=false;element('commandForm').handlers.submit({preventDefault(){prevented=true;},stopImmediatePropagation(){}});assert.equal(prevented,false,'manual correction enables submission');
 listeners.keydown({code:'KeyQ',preventDefault(){}});const errorSession=instances.at(-1);errorSession.onerror({error:'not-allowed'});errorSession.onend();assert.equal(input.value,'SVA111 C WOD','permission error preserves previous draft');assert.match(status.textContent,/not-allowed/);
-const unsupported={window:{},document:{getElementById:element}};vm.createContext(unsupported);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/voice.js','utf8'),unsupported);assert.equal(element('voiceBtn').disabled,true);
+const unsupported={window:{},document:{getElementById:element}};vm.createContext(unsupported);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/airlines.js','utf8'),unsupported);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/voice.js','utf8'),unsupported);assert.equal(element('voiceBtn').disabled,true);
 console.log('PASS: spoken numbers, phonetic/airline callsigns, all commands, live drafts, key repeat, submission gating, manual correction, microphone errors and unsupported browsers.');
+
+// Every entry shown in Info must actually be usable by the voice translator.
+const catalogue=context.window.ATC_AIRLINES;
+assert.equal(new Set(catalogue.map(a=>a.code)).size,catalogue.length);
+for(const airline of catalogue){
+ const vocabulary={callsigns:[airline.code+'123'],fixes:['WOD'],runways:['09R']};
+ for(const alias of [...airline.aliases,airline.code,airline.letters,airline.phonetic]){
+  assert.equal(context.window.ATCVoice.translate(`${alias} one two three heading Whiskey Oscar Delta`,vocabulary),`${airline.code}123 C WOD`,alias);
+ }
+}
+assert.equal(translate('American Airlines seven nine eight speed two five zero'),'AAL798 S 250');
+const resolver=context.window.ATCVoice.resolveAlternatives;
+assert.equal(resolver(['garbled text','VIR153 heading 090'],vocabulary).command,'VIR153 C 090');
+assert.throws(()=>resolver(['garbled text','VIR153 heading 090','VIR153 heading 180'],vocabulary),/multiple possible/);
+assert.equal(resolver(['VIR153 heading 090','VIR153 heading 180'],vocabulary).command,'VIR153 C 090','valid best transcript wins');
+// Ensure actual recognition events use the alternative when only it is valid.
+element('voiceBtn').disabled=false;listeners.keydown({code:'KeyQ',preventDefault(){}});
+const alternativeSession=instances.at(-1);assert.equal(alternativeSession.maxAlternatives,5);
+alternativeSession.onresult({results:[[{transcript:'garbled text'},{transcript:'American Airlines seven nine eight speed two five zero'}]]});
+alternativeSession.onend();assert.equal(input.value,'AAL798 S 250');assert.match(status.textContent,/matched alternative/);
+console.log(`PASS: all aliases/code/letters/phonetics for ${catalogue.length} airlines, full American Airlines, unique alternatives and ambiguity blocking.`);

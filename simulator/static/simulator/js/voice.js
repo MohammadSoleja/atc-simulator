@@ -4,7 +4,8 @@
   const phonetics='alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey xray yankee zulu'.split(' ');
   const letters=Object.fromEntries(phonetics.map((word,i)=>[word,String.fromCharCode(65+i)]));
   Object.assign(letters,{alfa:'A',juliett:'J',whisky:'W',pappa:'P'});
-  const airlines={'british airways':'BAW',speedbird:'BAW',easyjet:'EZY','easy jet':'EZY',virgin:'VIR',scandinavian:'SAS',klm:'KLM','air france':'AFR',lufthansa:'DLH',united:'UAL',american:'AAL',ryanair:'RYR',saudia:'SVA'};
+  const airlineAliases=window.ATC_AIRLINES.flatMap(a=>a.aliases.map(alias=>[alias,a.code]))
+    .sort((a,b)=>b[0].length-a[0].length);
   function tokens(text){
     text=text.toLowerCase().replace(/x-ray/g,'xray')
       // Recognition sometimes joins a phonetic letter to the flight number.
@@ -12,9 +13,9 @@
     // Repair observed speech-to-text substitutions only in instruction
     // contexts, before identifying commands or the runway-first pattern.
     text=text.replace(/\bdescendant\s+(?:and\s+)?maintain\b/g,'descend and maintain')
+      .replace(/\bflight\s+levels\b/g,'flight level')
       .replace(/\b(?:ride|write|rite)\b(?=\s+(?:cleared|clear|heading)\b|\s*$)/g,'right')
       .replace(/\b(\d+|zero|oh|one|two|three|four|five|six|seven|eight|nine|niner)\s+(?:ride|write|rite)\b/g,'$1 right');
-    for(const [name,code] of Object.entries(airlines))text=text.replace(new RegExp(`\\b${name}\\b`,'g'),code.toLowerCase());
     return text.trim().split(/\s+/).filter(Boolean);
   }
   function number(words){
@@ -50,7 +51,12 @@
     if(active.includes(compact))return compact;
     const firstDigit=words.findIndex(w=>w in digits||/^\d/.test(w));
     if(firstDigit<0)throw Error('Say an aircraft callsign and flight number.');
-    const candidate=identifier(words.slice(0,firstDigit))+words.slice(firstDigit).map(w=>String(number([w]))).join('');
+    const prefixWords=words.slice(0,firstDigit);
+    // Airline names apply only to the callsign, so Delta in a spelled fix
+    // or phonetic callsign is never replaced with the airline code DAL.
+    const alias=airlineAliases.find(([name])=>name===prefixWords.join(' '));
+    const prefix=alias?alias[1]:identifier(prefixWords);
+    const candidate=prefix+words.slice(firstDigit).map(w=>String(number([w]))).join('');
     if(!active.includes(candidate))throw Error(`No active aircraft matches ${candidate}.`);
     return candidate;
   }
@@ -87,7 +93,14 @@
         words=[...callWords,'cleared','for','landing','runway',...runwayWords,words[clearance-1],...words.slice(landingEnd)];
       }else if(splits.length>1)throw Error('Ambiguous callsign/runway. Say the callsign, then cleared to land runway.');
     }
-    const start=words.findIndex(w=>markers.has(w));
+    // A name such as "speed bird" contains a command word. Resolve the
+    // complete active callsign before choosing the instruction boundary.
+    let start=-1;
+    for(let index=1;index<words.length;index++){
+      if(!markers.has(words[index]))continue;
+      try{callsign(words.slice(0,index),context.callsigns);start=index;break;}catch{}
+    }
+    if(start<0)start=words.findIndex(w=>markers.has(w));
     if(start<1)throw Error('Say the callsign followed by an instruction.');
     const result=[callsign(words.slice(0,start),context.callsigns)];
     let i=start;
@@ -149,27 +162,48 @@
     }
     return result.join(' ');
   }
-  window.ATCVoice={translate};
+  function resolveAlternatives(transcripts,context){
+    // Prefer the best transcript if valid; otherwise require one unique draft.
+    try{return {command:translate(transcripts[0],context),heard:transcripts[0]};}catch{}
+    const valid=new Map();
+    for(const text of transcripts.slice(1)){
+      try{valid.set(translate(text,context),text);}catch{/* Incomplete or unknown instruction. */}
+    }
+    if(valid.size===1){const [command,heard]=[...valid][0];return {command,heard};}
+    if(valid.size>1)throw Error('Speech has multiple possible commands. Edit the draft or repeat it.');
+    translate(transcripts[0],context); // Report the best transcript's useful error.
+  }
+  window.ATCVoice={translate,resolveAlternatives};
   const input=document.getElementById('commandInput'),button=document.getElementById('voiceBtn'),status=document.getElementById('voiceStatus');
   if(!button)return;
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!Recognition){button.disabled=true;status.textContent='Voice unavailable in this browser. Try Chrome or Edge; typed commands still work.';return;}
-  let recognition=null,transcript='',previous='',busy=false,blocked=false,cancelled=false,failed=false;
+  let recognition=null,transcript='',alternatives=[],previous='',busy=false,blocked=false,cancelled=false,failed=false;
   function start(){
-    if(busy||document.getElementById('helpDialog').open)return;
-    previous=input.value;transcript='';busy=true;blocked=true;cancelled=false;failed=false;
-    recognition=new Recognition();recognition.lang='en-GB';recognition.continuous=true;recognition.interimResults=true;
+    if(busy||document.getElementById('helpDialog').open||document.getElementById('infoDialog').open)return;
+    previous=input.value;transcript='';alternatives=[];busy=true;blocked=true;cancelled=false;failed=false;
+    recognition=new Recognition();recognition.lang='en-GB';recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=5;
     status.textContent='Listening… speak, then release Q. Enter submits the draft.';button.setAttribute('aria-pressed','true');
     recognition.onresult=e=>{
       if(cancelled||failed)return;
       transcript=Array.from(e.results,r=>r[0].transcript).join(' ');
+      // Vary one recognition segment at a time rather than combining guesses.
+      const segments=Array.from(e.results,r=>Array.from(r,a=>a.transcript));
+      alternatives=[transcript];
+      segments.forEach((segment,index)=>segment.slice(1).forEach(option=>{
+        alternatives.push(segments.map((s,i)=>i===index?option:s[0]).join(' '));
+      }));
       input.value=transcript;status.textContent='Listening… '+transcript;
     };
     recognition.onerror=e=>{failed=true;status.textContent=`Voice error: ${e.error}. Check microphone permission/connection and try again.`;transcript='';};
     recognition.onend=()=>{
       busy=false;button.setAttribute('aria-pressed','false');
       if(!transcript||cancelled){input.value=previous;blocked=false;if(!failed)status.textContent=cancelled?'Voice cancelled.':'No speech detected. Hold Q to try again.';return;}
-      try{input.value=translate(transcript,window.getVoiceContext());blocked=false;status.textContent=`Heard: ${transcript} — draft ready. Check it, then Enter.`;}
+      try{
+        const draft=resolveAlternatives(alternatives,window.getVoiceContext());
+        input.value=draft.command;blocked=false;
+        status.textContent=`Heard: ${transcript}${draft.heard!==transcript?' — matched alternative: '+draft.heard:''} — draft ready. Check it, then Enter.`;
+      }
       catch(error){input.value=transcript;status.textContent=`${error.message} Edit the text into a command, or hold Q to retry.`;}
       input.focus();
     };

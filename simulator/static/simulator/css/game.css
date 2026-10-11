@@ -153,3 +153,10 @@ html[data-theme="dark"], html[data-theme="dark"] body { background:#17252f; }
 #voiceBtn { white-space:nowrap; font-size:11px; }
 #voiceBtn[aria-pressed="true"] { background:#a34444; color:white; }
 #voiceBtn:disabled { opacity:0.5; cursor:not-allowed; }
+
+.info-dialog { width:min(840px,92vw); }
+.airline-table { width:100%; border-collapse:collapse; text-align:left; font-size:12px; }
+.airline-table th,.airline-table td { padding:8px; border-bottom:1px solid var(--line); vertical-align:top; }
+.airline-table th { position:sticky; top:0; background:var(--panel); }
+.airline-table td:first-child { font-weight:bold; white-space:nowrap; }
+.airline-table td:last-child { overflow-wrap:anywhere; }

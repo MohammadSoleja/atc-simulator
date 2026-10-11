@@ -250,3 +250,27 @@ only when the complete identifier matches a known navigation fix. Niner remains
 9 in numeric instructions and callsigns. The standard spelling for NIGIT is
 “November India Golf India Tango”. These are translator corrections; browser
 speech-to-text accuracy still depends on actual microphone testing.
+
+### Airline catalogue and Info
+
+`airlines.js` is the shared list of 26 traffic airlines, airline-name/radio-name
+voice aliases, ICAO codes, spelled letters and phonetic spellings. Info beside
+Help displays the same list and pauses the simulation, restoring the prior pause
+state on close or Escape. Includes Saudia SVA, Riyadh Air RXI, Emirates UAE,
+Qatar QTR, Etihad ETD and a broader European/North American/Asian mix. This is
+simulator variety, not a claim that all operators serve Heathrow at every time.
+Codes/radio names were checked against the FAA callsign directory:
+https://www.faa.gov/air_traffic/publications/atpubs/cnt_html/chap3_section_1.html
+Riyadh Air's RXI code is also listed by IATA:
+https://www.iata.org/en/about/members/airline-list/riyadh-air/669/
+
+Airline aliases are matched only inside the callsign, so “Delta” in a spelled
+waypoint is not replaced by the Delta airline code. Full names such as American
+Airlines are supported, alongside American and Alpha Alpha Lima.
+
+Speech recognition requests up to five alternatives per result. Live text stays
+as the best browser transcript. If that cannot translate, valid alternatives are
+checked against active callsigns, navigation fixes and runway identifiers. Only
+one distinct valid alternative becomes a draft; competing commands are blocked.
+The status shows when an alternative was used. Recognition services may return
+fewer or no alternatives, and microphone accuracy is still a manual test.

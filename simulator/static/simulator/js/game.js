@@ -79,7 +79,7 @@
     ctx.lineCap='butt';ctx.lineJoin='miter';
 
   }
-  const airlines = ['BAW','EZY','VIR','SAS','KLM','AFR','DLH','UAL','AAL','RYR'];
+  const airlines = window.ATC_AIRLINES.map(airline=>airline.code);
   const aircraftTypes = ['A320','A321','B738','B789','A20N','B77W'];
   // Simplified game envelopes in knots, not weight/configuration-dependent flight models.
   const performanceProfiles = {
@@ -560,6 +560,17 @@
   document.getElementById('closeHelpBtn').onclick=()=>helpDialog.close();
   helpDialog.addEventListener('close',()=>{
     state.paused=pausedBeforeHelp;
+    document.getElementById('pauseBtn').textContent=state.paused?'Resume':'Pause';input.focus();
+  });
+  const infoDialog=document.getElementById('infoDialog');
+  let pausedBeforeInfo=false;
+  document.getElementById('infoBtn').onclick=()=>{
+    pausedBeforeInfo=state.paused;state.paused=true;
+    document.getElementById('pauseBtn').textContent='Resume';infoDialog.showModal();
+  };
+  document.getElementById('closeInfoBtn').onclick=()=>infoDialog.close();
+  infoDialog.addEventListener('close',()=>{
+    state.paused=pausedBeforeInfo;
     document.getElementById('pauseBtn').textContent=state.paused?'Resume':'Pause';input.focus();
   });
   const speedButtons=[...document.querySelectorAll('[data-speed]')];
