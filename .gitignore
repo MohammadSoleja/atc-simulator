@@ -23,3 +23,6 @@ __pycache__/
 
 # Collected deployment assets
 /staticfiles/
+
+# Private development signing key
+.django-secret-key

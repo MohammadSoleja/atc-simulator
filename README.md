@@ -8,6 +8,7 @@ A from-scratch browser ATC simulator built with Django and vanilla JavaScript.
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+python manage.py migrate
 python manage.py runserver
 ```
 
@@ -325,7 +326,7 @@ fewer or no alternatives, and microphone accuracy is still a manual test.
 
 Keep the development server bound to `127.0.0.1`. Default allowed hosts are
 `localhost`, `127.0.0.1`, and `[::1]`; arbitrary hostnames are rejected.
-Local debug mode uses a random per-process secret. Before future deployment,
+Local debug mode uses a random signing key stored in ignored `.django-secret-key`. Before future deployment,
 set `DJANGO_DEBUG=false`, a private `DJANGO_SECRET_KEY`, and explicit
 comma-separated `DJANGO_ALLOWED_HOSTS`. Environment variables are read directly;
 `.env` files are not automatically loaded. Production HTTPS configuration and
@@ -337,3 +338,38 @@ from `requirements.txt` in a virtual environment; the Django minimum includes
 current 5.2 security patches. Browser speech recognition may send microphone
 audio to the browser provider. The simulator's downloadable voice log contains
 transcripts and is kept only in tab memory until you explicitly download it.
+
+
+### Accounts (A01 / A02)
+
+Run `python manage.py migrate` after updating to create Django's user and session
+tables in your ignored local SQLite database. Welcome-page links open
+`/accounts/register/` and `/accounts/login/`. Registration requires a username,
+valid email address, and a confirmed password meeting Django's validators;
+successful registration signs the player in. Login uses username and password.
+Email verification and password reset are not implemented in these tickets.
+Email addresses are not unique identifiers in this initial Django user model.
+
+Logout uses a CSRF-protected POST form. Guests can still open `/play/` without
+an account. Accounts do not yet save games or statistics. The private local
+signing key persists across server restarts; do not commit it. Set a private
+`DJANGO_SECRET_KEY` when deploying. Production cookies require HTTPS when debug
+is disabled. Public deployment also needs login abuse/rate-limit controls.
+
+Playtest: create an account, try duplicate/invalid registration, log out, try
+incorrect credentials, log back in, and confirm guest play and both themes.
+
+### Manage accounts with Django admin
+
+Django admin is available at `/admin/`. Create your own administrator locally:
+
+```bash
+source .venv/bin/activate
+python manage.py migrate
+python manage.py createsuperuser
+```
+
+Choose the username, email and password in your terminal, then sign in at
+`http://127.0.0.1:8000/admin/` (or the port your server uses). Normal player
+registration does not grant staff or administrator privileges. Restart the
+server after enabling the admin application.

@@ -77,3 +77,27 @@ button.start-button { font:inherit; font-weight:600; border:0; cursor:pointer; }
   .guide-content { padding:0 14px 14px; }
   .command-table th, .command-table td { padding:8px 4px; }
 }
+
+/* Account screens share the welcome-page theme. */
+.account-link, .account-name { font-size:13px; color:var(--accent); }
+button.account-link { background:none; border:0; padding:0; font:inherit; font-size:13px; cursor:pointer; text-decoration:underline; }
+.logout-form { margin:0; }
+.brand { text-decoration:none; }
+.header-actions { flex-wrap:wrap; justify-content:flex-end; }
+.account-main { max-width:540px; padding-top:44px; }
+.account-card { background:white; border:1px solid var(--line); border-radius:12px; padding:28px; }
+.account-card h1 { font-size:32px; margin-bottom:12px; }
+.account-note, .field-help { color:var(--muted); font-size:13px; }
+.account-card a { color:var(--accent); }
+.account-field { margin:18px 0; }
+.account-field label { display:block; font-size:14px; font-weight:600; margin-bottom:5px; }
+.account-field input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:5px; font:inherit; font-size:15px; background:#f4f7fa; color:var(--text); }
+.account-field input:focus-visible { outline:2px solid #3d8eb8; outline-offset:2px; }
+.field-help { margin-top:6px; }
+.field-help ul { padding-left:20px; margin:6px 0; }
+.form-errors { color:#a62936; font-size:13px; }
+.form-errors ul { padding-left:20px; margin:6px 0; }
+.guest-link { font-size:14px; }
+[data-theme="dark"] .account-card { background:#1c2b36; }
+[data-theme="dark"] .account-field input { background:#233440; }
+[data-theme="dark"] .form-errors { color:#ffb2bc; }

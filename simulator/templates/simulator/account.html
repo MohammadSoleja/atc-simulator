@@ -1,0 +1,37 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if registering %}Create account{% else %}Log in{% endif %} | ATC Simulator</title>
+  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}">
+  <script src="{% static 'simulator/js/theme.js' %}"></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="{% url 'welcome' %}">ATC SIMULATOR</a><button id="themeBtn" type="button">Dark theme</button></header>
+  <main class="account-main">
+    <section class="account-card" aria-labelledby="account-title">
+      <p class="eyebrow">Your controller account</p>
+      <h1 id="account-title">{% if registering %}Create account{% else %}Welcome back{% endif %}</h1>
+      <p class="account-note">{% if registering %}Choose a username and password to get started.{% else %}Log in with your username and password.{% endif %}</p>
+      <form method="post">
+        {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        {% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form %}
+          <div class="account-field">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<div class="field-help" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>{% endif %}
+            {% if field.errors %}<div class="form-errors" role="alert">{{ field.errors }}</div>{% endif %}
+          </div>
+        {% endfor %}
+        <button class="start-button" type="submit">{% if registering %}Create account{% else %}Log in{% endif %}</button>
+      </form>
+      <p class="account-note">{% if registering %}Already registered? <a href="{% url 'login' %}">Log in</a>.{% else %}New here? <a href="{% url 'register' %}">Create account</a>.{% endif %}</p>
+      <a class="guest-link" href="{% url 'welcome' %}">Continue as a guest</a>
+    </section>
+  </main>
+</body>
+</html>
