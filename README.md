@@ -11,7 +11,13 @@ pip install -r requirements.txt
 python manage.py runserver
 ```
 
-Then open `http://127.0.0.1:8000/`.
+Then open `http://127.0.0.1:8000/` for the welcome page and click **Start game**.
+The simulator is also available directly at `http://127.0.0.1:8000/play/`.
+
+The welcome page is a simple introduction with a Heathrow session entry point.
+Map selection and the full quick-start guide are separate follow-up tickets.
+
+Run `python manage.py test simulator` to check the welcome and simulator routes.
 
 ## Current playable features
 
