@@ -144,21 +144,26 @@ function runwayPair(){
 }
 let pair=runwayPair();engine.checkSeparation();assert.equal(engine.getState().violations,0,'parallel runway final and ground roll exempt');
 pair.departure.phase='airborne';pair.departure.altitude=50;engine.checkSeparation();
-assert.equal(engine.getState().violations,1,'liftoff immediately restores airborne separation');
+assert.equal(engine.getState().violations,0,'aligned initial climb remains a parallel runway operation');
+pair.departure.heading=240;engine.checkSeparation();
+assert.equal(engine.getState().violations,1,'turning away restores airborne separation');
 engine.checkSeparation();assert.equal(engine.getState().violations,1,'continued conflict is not double penalised');
-for(const scenario of ['same runway','not captured','overhead','outside final']){
+for(const scenario of ['same runway','not captured','overhead','outside final','departure above corridor','departure crossing','opposite departure']){
  pair=runwayPair();
  if(scenario==='same runway')Object.assign(pair.departure,{runway:'27R',y:pair.north.y1});
  if(scenario==='not captured')pair.landing.approachCaptured=false;
  if(scenario==='overhead')pair.landing.heading=90;
  if(scenario==='outside final')pair.landing.y-=.2/70;
+ if(scenario==='departure above corridor'){pair.departure.phase='airborne';pair.departure.altitude=1100;}
+ if(scenario==='departure crossing'){pair.departure.phase='airborne';pair.departure.y+=.2/70;}
+ if(scenario==='opposite departure')pair.departure.heading=90;
  engine.checkSeparation();assert.equal(engine.getState().violations,1,scenario+' still monitored');
 }
 engine.reset();engine.update(24,20);
 assert.equal(engine.getState().elapsed,24,'aircraft dynamics can run 20% faster');
 assert.equal(engine.getState().clockElapsed,20,'clock uses the new Normal baseline');
 assert.equal(engine.getState().trafficElapsed,10,'traffic timing retains clock baseline');
-console.log('PASS: narrow parallel-runway exemption, liftoff/same-runway/overhead conflicts, and separate gameplay/clock pace.');
+console.log('PASS: narrow parallel-runway exemption, initial climb and same-runway/overhead conflicts, and separate gameplay/clock pace.');
 
 engine.reset();engine.getState().trafficElapsed=31;engine.update(0);
 let notice=engine.getState().upcoming[0];assert.ok(notice,'next flight is previewed');

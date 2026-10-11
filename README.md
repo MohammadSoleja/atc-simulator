@@ -195,8 +195,11 @@ altitude and speed changes; indicated speeds and aircraft envelopes are unchange
 The airport clock advances two minutes per real minute at Normal. Automatic traffic has a 30-second
 base interval, with the existing gradual buildup, time-of-day mix and caps.
 A narrow separation exception applies only to an established final within 3 NM,
-at/below 1,000 ft and within 0.1 NM of its centreline, paired with a ground takeoff
-roll on a different parallel runway in the same direction. It stops at liftoff.
+at/below 1,000 ft and within 0.1 NM of its centreline, paired with a takeoff
+roll or aligned initial climb on a different parallel runway in the same
+direction. The departure must remain at/below 1,000 ft, within 0.1 NM of its
+centreline, within 10 degrees of runway heading, and no farther than 3 NM
+beyond its runway end.
 Same-runway conflicts, go-arounds, overhead and other airborne aircraft remain
 subject to the normal separation checks. This is a gameplay rule, not a complete
 real-world parallel runway separation model.

@@ -12,7 +12,9 @@
       .replace(/([a-z])(\d)/g,'$1 $2').replace(/[^a-z0-9\s]/g,' ');
     // Repair observed speech-to-text substitutions only in instruction
     // contexts, before identifying commands or the runway-first pattern.
-    text=text.replace(/\bdescendant\s+(?:and\s+)?maintain\b/g,'descend and maintain')
+    text=text.replace(/\bmaintained\b/g,'maintain')
+      .replace(/\bdescent\b/g,'descend')
+      .replace(/\bdescendant\s+(?:and\s+)?maintain\b/g,'descend and maintain')
       .replace(/\bflight\s+levels\b/g,'flight level')
       .replace(/\b(?:ride|write|rite)\b(?=\s+(?:cleared|clear|heading)\b|\s*$)/g,'right')
       .replace(/\b(\d+|zero|oh|one|two|three|four|five|six|seven|eight|nine|niner)\s+(?:ride|write|rite)\b/g,'$1 right');

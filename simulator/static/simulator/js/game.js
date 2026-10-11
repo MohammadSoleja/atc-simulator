@@ -384,8 +384,9 @@
     const arrival=a.kind==='arrival'?a:b;
     const departure=a.kind==='departure'?a:b;
     if(arrival.kind!=='arrival'||departure.kind!=='departure')return false;
-    // Only the ground roll is exempt. Liftoff immediately restores separation.
-    if(departure.phase!=='takeoff'||departure.altitude>1||!arrival.approachCaptured||!arrival.clearedToLand)return false;
+    // Separate parallel runway operations include ground roll and the low,
+    // aligned initial climb, not a general exemption for nearby aircraft.
+    if(!['takeoff','airborne'].includes(departure.phase)||departure.altitude>1000||!arrival.approachCaptured||!arrival.clearedToLand)return false;
     const landingRunway=runways.find(r=>r.id===arrival.clearedToLand);
     const takeoffRunway=runways.find(r=>r.id===departure.runway);
     if(!landingRunway||!takeoffRunway||landingRunway.heading!==takeoffRunway.heading)return false;
@@ -395,7 +396,8 @@
     const length=distance({x:takeoffRunway.x1,y:takeoffRunway.y1},{x:takeoffRunway.x2,y:takeoffRunway.y2});
     return arrival.altitude<=1000 && landing.ahead>=0 && landing.ahead<=3 &&
       Math.abs(landing.cross)<0.1 && Math.abs(turnDelta(arrival.heading,landingRunway.heading))<10 &&
-      takeoff.ahead<=0.05 && takeoff.ahead>=-length && Math.abs(takeoff.cross)<0.05;
+      takeoff.ahead<=0.05 && takeoff.ahead>=-(length+3) && Math.abs(takeoff.cross)<0.1 &&
+      Math.abs(turnDelta(departure.heading,takeoffRunway.heading))<10;
   }
 
   function isParallelFinalPair(a,b){
@@ -516,6 +518,9 @@
     for(const a of state.aircraft){
       const d=document.createElement('div');d.className=`strip ${a.kind} ${state.selected===a.id?'selected':''}`;
       d.innerHTML=`<div class="strip-top"><span class="callsign">${a.callsign}</span><span class="kind">${a.kind==='arrival'?'ARR':'DEP'}</span></div><div class="strip-bottom"><span>${a.type}</span><span>${Math.round(a.altitude)}ft</span><span>${Math.round(a.speed)}kt</span></div>${a.kind==='departure'?`<div class="strip-bottom">${a.runway?'RWY '+a.runway:'Assign runway: R 27L / R 27R / R 09L / R 09R'} · FIX ${a.exitFix}</div>`:''}`;
+      const airportDistance=document.createElement('div');airportDistance.className='strip-bottom';
+      airportDistance.textContent=`${distance(a,airport).toFixed(1)} NM from Heathrow`;
+      d.appendChild(airportDistance);
       if(a.kind==='arrival'&&a.clearedToLand){
         const status=document.createElement('div');status.className='strip-bottom';
         status.textContent=`RWY ${a.clearedToLand} · ${a.approachCaptured?'FINAL':'AWAITING INTERCEPT'}`;d.appendChild(status);

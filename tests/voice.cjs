@@ -4,10 +4,16 @@ function element(id){return elements[id]??=( {value:'',textContent:'',open:false
 class Recognition {constructor(){instances.push(this);}start(){}stop(){this.stopped=true;}abort(){this.onend();}}
 const context={window:{SpeechRecognition:Recognition,addEventListener(){}},document:{getElementById:element,addEventListener(type,fn){listeners[type]=fn;}}};
 vm.createContext(context);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/airlines.js','utf8'),context);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/voice.js','utf8'),context);
-const vocabulary={callsigns:['SVA111','BAW123','AAL798','KLM713','VIR636','VIR153','UAE501'],fixes:['WOD','CPT','NIGIT','HEN'],runways:['27L','27R','09L','09R']};
+const vocabulary={callsigns:['SVA111','BAW123','AAL798','KLM713','VIR636','VIR153','UAE501','AIC786'],fixes:['WOD','CPT','NIGIT','HEN','DONNA'],runways:['27L','27R','09L','09R']};
 context.window.getVoiceContext=()=>vocabulary;
 const translate=text=>context.window.ATCVoice.translate(text,vocabulary);
 for(const [spoken,expected] of [
+ ['Air India 786 descent and maintain flight Level 3,000 speed 200 heading Donna','AIC786 C 3 S 200 C DONNA'],
+ ['Air India seven eight six descent and maintained three thousand','AIC786 C 3'],
+ ['Emirates 501 descend and maintained flight levels 3,000 speed 250 heading hotel echo November','UAE501 C 3 S 250 C HEN'],
+ ['BAW123 climb and maintained five thousand','BAW123 C 5'],
+ ['VIR153 maintained three thousand','VIR153 C 3'],
+ ['VIR153 descendant maintained three thousand','VIR153 C 3'],
  ['Emirates 501 descend and maintain flight levels 3,000 speed 250 heading hotel echo November','UAE501 C 3 S 250 C HEN'],
  ['Emirates five zero one maintain flight levels three zero','UAE501 C 3'],
  ['VIR153 descendant maintain flight level 3,000 speed 250 heading 090','VIR153 C 3 S 250 C 090'],
