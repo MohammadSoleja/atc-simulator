@@ -94,6 +94,7 @@
 
   let state;
   function reset() {
+    window.ATCReadbacks?.clear();
     state = { aircraft:[], upcoming:[], selected:null, paused:false, elapsed:0, clockElapsed:0, trafficElapsed:0, lastSpawn:0, nextId:1,
       landings:0, handoffs:0, violations:0, missed:0, score:0, conflicts:new Set() };
     setSimulationRate(NORMAL_SIMULATION_RATE);
@@ -152,10 +153,16 @@
     const altitude = Math.round(rand(65,100))*100;
     state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'arrival',x,y,heading:hdg,targetHeading:hdg,altitude,targetAltitude:altitude,speed:Math.round(rand(220,270)),targetSpeed:220,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'airborne'});
     if(planned)Object.assign(state.aircraft[state.aircraft.length-1],planned);
+    pilotReport(state.aircraft[state.aircraft.length-1],'arrival');
   }
   function spawnDeparture(planned=null){
     state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'departure',x:airport.x,y:airport.y,heading:270,targetHeading:270,altitude:0,targetAltitude:0,speed:0,targetSpeed:0,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'holding',runway:null,exitFix:departureFixes[Math.floor(rand(0,departureFixes.length))].id});
     if(planned)Object.assign(state.aircraft[state.aircraft.length-1],planned);
+    pilotReport(state.aircraft[state.aircraft.length-1],'departure');
+  }
+  function pilotReport(a,kind,fix=''){
+    const text=window.ATCReadbacks?.event({callsign:a.callsign,kind,fix,altitude:a.altitude,clock:timeOfDaySeconds()});
+    if(text)say(text);
   }
 
   function assignRunway(a,value){
@@ -263,12 +270,22 @@
     }
   }
 
+  let commandResponse=null;
   function parseCommand(raw){
+    try{executeCommand(raw);}
+    finally{
+      const response=commandResponse;
+      commandResponse=null;
+      if(response)window.ATCReadbacks?.respond(response);
+    }
+  }
+  function executeCommand(raw){
     const t=raw.trim().toUpperCase().split(/\s+/); if(!t[0])return;
     if(t[0]==='STATS'){return say(`Score ${state.score} | Landings ${state.landings} | Handoffs ${state.handoffs} | Violations ${state.violations}`)}
     const a=findAircraft(t[0]); if(!a)return say(`Aircraft ${t[0]} not found.`,true);
     let i=1;
     const readback=[];
+    commandResponse={callsign:a.callsign,instructions:readback,error:''};
     while(i<t.length){
       const cmd=t[i++];
       if(cmd==='C' && i<t.length){const result=applyClearance(a,t[i++]);if(!result)return;readback.push(result);}
@@ -290,7 +307,10 @@
     say(`${a.callsign}: ${readback.length?readback.join(', '):'no instructions provided'}.`); selectAircraft(a);
   }
 
-  function say(msg,error=false){ messageEl.textContent=msg; messageEl.className='message '+(error?'error':'ok'); }
+  function say(msg,error=false){
+    messageEl.textContent=msg; messageEl.className='message '+(error?'error':'ok');
+    if(error&&commandResponse)commandResponse.error=msg;
+  }
   function selectAircraft(a){ state.selected=a?.id ?? null; input.value=a?`${a.callsign} `:''; input.focus(); renderStrips(); }
 
   function timeOfDaySeconds(){return (SESSION_START_SECONDS+state.clockElapsed)%86400;}
@@ -343,7 +363,14 @@
     for(const a of [...state.aircraft]){
       if(a.removeAt!==undefined || a.phase==='holding')continue;
       if(a.phase==='takeoff')a.targetHeading=runways.find(r=>r.id===a.runway).heading;
-      if(a.nav && a.phase==='airborne'){ const dx=(a.nav.x-a.x)*sector.width,dy=(a.nav.y-a.y)*sector.height; a.targetHeading=normalizeHeading(Math.atan2(dx,-dy)*180/Math.PI); if(distance(a,a.nav)<1.2)a.nav=null; }
+      if(a.nav && a.phase==='airborne'){
+        const dx=(a.nav.x-a.x)*sector.width,dy=(a.nav.y-a.y)*sector.height;
+        a.targetHeading=normalizeHeading(Math.atan2(dx,-dy)*180/Math.PI);
+        if(distance(a,a.nav)<1.2){
+          if(!(a.kind==='departure'&&a.nav.id===a.exitFix&&a.altitude>=4000))pilotReport(a,'fix',a.nav.id);
+          a.nav=null;
+        }
+      }
       updateApproach(a);
       updateTurn(a,dt);
       const altDelta=a.targetAltitude-a.altitude; const climb=Math.sign(altDelta)*Math.min(Math.abs(altDelta),1600*dt/60);
@@ -382,7 +409,7 @@
           say(`${a.callsign}: unable to complete landing on ${rw.id}, going around to 3,000 ft.`,true);
         }
       }
-      if(a.kind==='departure' && a.phase==='airborne' && a.altitude>=4000){ const f=findFix(a.exitFix); if(distance(a,f)<1.3){state.handoffs++;state.score+=80; removeAircraft(a);}}
+      if(a.kind==='departure' && a.phase==='airborne' && a.altitude>=4000){ const f=findFix(a.exitFix); if(distance(a,f)<1.3){state.handoffs++;state.score+=80;pilotReport(a,'handoff',f.id);removeAircraft(a);}}
       if(a.x<-.08||a.x>1.08||a.y<-.08||a.y>1.08){ if(a.kind==='arrival'){state.missed++;state.score-=100;} removeAircraft(a); }
     }
     checkSeparation();

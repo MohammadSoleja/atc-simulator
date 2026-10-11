@@ -78,6 +78,14 @@
   <h3>Voice diagnostics</h3>
   <button id="voiceExportBtn" type="button">Download voice log</button>
   <p>Exports the last 100 completed attempts from this tab. Text only; no audio. The log clears on reload.</p>
+  <h3>Pilot readbacks</h3>
+  <label><input id="readbackMute" type="checkbox"> Mute pilot voices</label>
+  <p><label>Volume <input id="readbackVolume" type="range" min="0" max="100" value="70"></label></p>
+  <p><label>Speaking pace <input id="readbackRate" type="range" min="0.9" max="1.6" step="0.1" value="1.2"></label></p>
+  <p><label>Voice <select id="readbackVoice"><option value="">Automatic English voice</option></select></label></p>
+  <p><button id="readbackTest" type="button">Test pilot voice</button></p>
+  <label><input id="pilotCalls" type="checkbox" checked> Pilot greetings and position reports</label>
+  <p id="readbackStatus" role="status">Pilots repeat submitted instructions. Text feedback remains available.</p>
 </dialog>
 <dialog id="helpDialog" class="help-dialog">
   <div class="panel-title-row"><h2>Simulator help</h2><button id="closeHelpBtn" type="button">Close</button></div>
@@ -120,6 +128,7 @@
 </dialog>
 <script src="{% static 'simulator/js/airlines.js' %}"></script>
 <script src="{% static 'simulator/js/map-data.js' %}"></script>
+<script src="{% static 'simulator/js/readbacks.js' %}"></script>
 <script src="{% static 'simulator/js/game.js' %}"></script>
 <script src="{% static 'simulator/js/info.js' %}"></script>
 <script src="{% static 'simulator/js/voice.js' %}"></script>

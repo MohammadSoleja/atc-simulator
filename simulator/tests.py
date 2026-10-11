@@ -44,3 +44,21 @@ class PageRoutingTests(SimpleTestCase):
         self.assertContains(response, 'Quick-start guide &amp; command examples')
         for topic in ['Sequence an arrival', 'Release a departure', 'Keep aircraft separated', 'Control the pace', 'speak your instructions']:
             self.assertContains(response, topic)
+
+
+class LocalSecurityTests(SimpleTestCase):
+    def test_pages_cannot_be_embedded_in_another_site(self):
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.headers['X-Frame-Options'], 'DENY')
+        self.assertEqual(response.headers['X-Content-Type-Options'], 'nosniff')
+
+    def test_untrusted_hostname_is_rejected(self):
+        from django.test import override_settings
+        with override_settings(ALLOWED_HOSTS=['localhost', '127.0.0.1']):
+            response = self.client.get('/', HTTP_HOST='untrusted.example')
+        self.assertEqual(response.status_code, 400)
+
+    def test_post_requires_csrf_protection(self):
+        from django.test import Client
+        response = Client(enforce_csrf_checks=True).post(reverse('index'))
+        self.assertEqual(response.status_code, 403)

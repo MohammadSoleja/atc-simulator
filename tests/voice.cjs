@@ -111,4 +111,33 @@ for(let n=0;n<105;n++){
  r.onresult({results:[[{transcript:'SVA111 heading 090'}]]});r.onend();
 }
 assert.equal(context.window.ATCVoice.getDiagnostics().length,100,'bounded diagnostic buffer');
+const pilotReplies=[],listeningStates=[];
+context.window.ATCReadbacks={respond(result){pilotReplies.push(result);},setListening(value){listeningStates.push(value);}};
+for(const [spoken,expectedReply] of [['SVA111 speed banana','SVA111'],['SVA1119 speed banana',null]]){
+ listeners.keydown({code:'KeyQ',preventDefault(){}});const r=instances.at(-1);
+ const before=pilotReplies.length;
+ r.onresult({results:[[{transcript:spoken}]]});r.onend();
+ assert.equal(pilotReplies.length,before,'drafting never produces a pilot reply');
+ element('commandForm').handlers.submit({preventDefault(){},stopImmediatePropagation(){}});
+ assert.equal(pilotReplies.length,before+(expectedReply?1:0));
+ if(expectedReply)assert.equal(pilotReplies.at(-1).callsign,expectedReply);
+}
+assert.deepEqual(listeningStates,[true,false,true,false]);
 console.log(`PASS: all aliases/code/letters/phonetics for ${catalogue.length} airlines, full American Airlines, unique alternatives and ambiguity blocking.`);
+// Conversation must preserve the command and never hide invalid instructions.
+for(const spoken of [
+ 'Good morning SVA111 descend and maintain three thousand speed two five zero thank you',
+ 'SVA111 marhaba descend and maintain three thousand speed two five zero goodbye',
+])assert.equal(translate(spoken),'SVA111 C 3 S 250');
+for(const spoken of ['hello','good evening SVA111','SVA111 thank you goodbye'])assert.equal(translate(spoken),'');
+assert.throws(()=>translate('hello SVA111 speed banana goodbye'),/Speed.*banana/);
+assert.throws(()=>translate('good morning SVA1119 hello'),/Callsign/);
+listeners.keydown({code:'KeyQ',preventDefault(){}});
+const greetingRecognition=instances.at(-1),replyCount=pilotReplies.length;
+greetingRecognition.onresult({results:[[{transcript:'SVA111 good morning'}]]});greetingRecognition.onend();
+assert.match(status.textContent,/Greeting recognised/);
+prevented=false;element('commandForm').handlers.submit({preventDefault(){prevented=true;},stopImmediatePropagation(){}});
+assert.equal(prevented,true,'greetings never reach the simulation command parser');
+assert.equal(input.value,'');assert.equal(pilotReplies.length,replyCount,'no say-again for a greeting');
+assert.match(status.textContent,/No aircraft instructions changed/);
+console.log('PASS: greeting boundaries, combined instructions, unknown callsigns and greeting-only submission.');
