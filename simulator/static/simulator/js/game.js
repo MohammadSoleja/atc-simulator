@@ -593,6 +593,17 @@
     document.getElementById('pauseBtn').textContent=state.paused?'Resume':'Pause';input.focus();
   });
   const speedButtons=[...document.querySelectorAll('[data-speed]')];
+  const settingsDialog=document.getElementById('settingsDialog');
+  let pausedBeforeSettings=false;
+  document.getElementById('settingsBtn').onclick=()=>{
+    pausedBeforeSettings=state.paused;state.paused=true;
+    document.getElementById('pauseBtn').textContent='Resume';settingsDialog.showModal();
+  };
+  document.getElementById('closeSettingsBtn').onclick=()=>settingsDialog.close();
+  settingsDialog.addEventListener('close',()=>{
+    state.paused=pausedBeforeSettings;
+    document.getElementById('pauseBtn').textContent=state.paused?'Resume':'Pause';input.focus();
+  });
   function setSimulationRate(rate){
     simulationRate=rate;
     for(const button of speedButtons)button.setAttribute('aria-pressed',String(Number(button.dataset.speed)===rate));

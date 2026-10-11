@@ -1,0 +1,232 @@
+[
+  {
+    "group": "altitude",
+    "spoken": "Air India 786 descent and maintain flight Level 3,000 speed 200 heading Donna",
+    "expected": "AIC786 C 3 S 200 C DONNA"
+  },
+  {
+    "group": "altitude",
+    "spoken": "Air India seven eight six descent and maintained three thousand",
+    "expected": "AIC786 C 3"
+  },
+  {
+    "group": "altitude",
+    "spoken": "Emirates 501 descend and maintained flight levels 3,000 speed 250 heading hotel echo November",
+    "expected": "UAE501 C 3 S 250 C HEN"
+  },
+  {
+    "group": "altitude",
+    "spoken": "BAW123 climb and maintained five thousand",
+    "expected": "BAW123 C 5"
+  },
+  {
+    "group": "altitude",
+    "spoken": "VIR153 maintained three thousand",
+    "expected": "VIR153 C 3"
+  },
+  {
+    "group": "altitude",
+    "spoken": "VIR153 descendant maintained three thousand",
+    "expected": "VIR153 C 3"
+  },
+  {
+    "group": "altitude",
+    "spoken": "Emirates 501 descend and maintain flight levels 3,000 speed 250 heading hotel echo November",
+    "expected": "UAE501 C 3 S 250 C HEN"
+  },
+  {
+    "group": "altitude",
+    "spoken": "Emirates five zero one maintain flight levels three zero",
+    "expected": "UAE501 C 3"
+  },
+  {
+    "group": "altitude",
+    "spoken": "VIR153 descendant maintain flight level 3,000 speed 250 heading 090",
+    "expected": "VIR153 C 3 S 250 C 090"
+  },
+  {
+    "group": "altitude",
+    "spoken": "VIR153 descendant and maintain three thousand",
+    "expected": "VIR153 C 3"
+  },
+  {
+    "group": "clearance",
+    "spoken": "VIR153 cleared for landing runway zero nine ride",
+    "expected": "VIR153 L 09R"
+  },
+  {
+    "group": "clearance",
+    "spoken": "VIR153 09 ride cleared for landing",
+    "expected": "VIR153 L 09R"
+  },
+  {
+    "group": "clearance",
+    "spoken": "KLM713 cleared five thousand runway nine ride cleared for takeoff",
+    "expected": "KLM713 C 5 R 09R T"
+  },
+  {
+    "group": "heading",
+    "spoken": "VIR153 turn ride heading zero nine zero",
+    "expected": "VIR153 C 090"
+  },
+  {
+    "group": "altitude",
+    "spoken": "Victor India Romeo 1 5 3 descend and maintain flight Level 3,000 Speed 2 5 0 heading Charlie Pappa tango",
+    "expected": "VIR153 C 3 S 250 C CPT"
+  },
+  {
+    "group": "clearance",
+    "spoken": "Victor India Romeo 636 09 left cleared for landing",
+    "expected": "VIR636 L 09L"
+  },
+  {
+    "group": "clearance",
+    "spoken": "Victor India Romeo six three six zero nine left cleared for landing",
+    "expected": "VIR636 L 09L"
+  },
+  {
+    "group": "clearance",
+    "spoken": "VIR636 runway 09 left cleared to land",
+    "expected": "VIR636 L 09L"
+  },
+  {
+    "group": "clearance",
+    "spoken": "Virgin six three six two seven right cleared for landing",
+    "expected": "VIR636 L 27R"
+  },
+  {
+    "group": "clearance",
+    "spoken": "VIR636 09 left cleared for landing speed one eight zero",
+    "expected": "VIR636 L 09L S 180"
+  },
+  {
+    "group": "clearance",
+    "spoken": "KLM 713 cleared five thousand runway 9 right cleared for takeoff",
+    "expected": "KLM713 C 5 R 09R T"
+  },
+  {
+    "group": "clearance",
+    "spoken": "Kilo Lima Mike seven one three cleared to 5,000 runway zero nine right cleared for take off",
+    "expected": "KLM713 C 5 R 09R T"
+  },
+  {
+    "group": "clearance",
+    "spoken": "KLM713 cleared five thousand",
+    "expected": "KLM713 C 5"
+  },
+  {
+    "group": "altitude",
+    "spoken": "aal798  descend  and maintain  flight Level  3, 000 speed  250 heading  niner indigo golf indigo tango",
+    "expected": "AAL798 C 3 S 250 C NIGIT"
+  },
+  {
+    "group": "altitude",
+    "spoken": "alpha alpha lima 798 descend and maintain flight level 3,000 speed 250 heading niner indigo golf indigo tango",
+    "expected": "AAL798 C 3 S 250 C NIGIT"
+  },
+  {
+    "group": "altitude",
+    "spoken": "alpha alpha lima798 descend and maintain three thousand direct November India Golf India Tango",
+    "expected": "AAL798 C 3 C NIGIT"
+  },
+  {
+    "group": "heading",
+    "spoken": "American seven niner eight heading zero niner zero",
+    "expected": "AAL798 C 090"
+  },
+  {
+    "group": "fix",
+    "spoken": "AAL798 heading nine indigo golf indigo tango",
+    "expected": "AAL798 C NIGIT"
+  },
+  {
+    "group": "numbers",
+    "spoken": "AAL798 speed two niner zero",
+    "expected": "AAL798 S 290"
+  },
+  {
+    "group": "altitude",
+    "spoken": "Sierra Victor Alpha one one one descend and maintain three thousand speed two five zero heading Whiskey Oscar Delta",
+    "expected": "SVA111 C 3 S 250 C WOD"
+  },
+  {
+    "group": "numbers",
+    "spoken": "Saudia one eleven reduce speed to two five zero heading zero nine zero",
+    "expected": "SVA111 S 250 C 090"
+  },
+  {
+    "group": "numbers",
+    "spoken": "SVA111 increase speed two five zero direct W O D",
+    "expected": "SVA111 S 250 C WOD"
+  },
+  {
+    "group": "altitude",
+    "spoken": "Speedbird one two three climb and maintain flight level three zero",
+    "expected": "BAW123 C 3"
+  },
+  {
+    "group": "altitude",
+    "spoken": "British Airways one two three maintain flight level 3000 speed two fifty",
+    "expected": "BAW123 C 3 S 250"
+  },
+  {
+    "group": "clearance",
+    "spoken": "B A W one two three runway zero nine right cleared for takeoff",
+    "expected": "BAW123 R 09R T"
+  },
+  {
+    "group": "clearance",
+    "spoken": "SVA111 cleared to land runway two seven left",
+    "expected": "SVA111 L 27L"
+  },
+  {
+    "group": "clearance",
+    "spoken": "SVA111 go around",
+    "expected": "SVA111 G"
+  },
+  {
+    "group": "heading",
+    "spoken": "SVA111 turn left heading three six zero",
+    "expected": "SVA111 C 360"
+  },
+  {
+    "group": "altitude",
+    "spoken": "SVA111 altitude five hundred",
+    "expected": "SVA111 A 500"
+  },
+  {
+    "group": "callsign",
+    "spoken": "American Airlines seven nine eight heading zero nine zero",
+    "expected": "AAL798 C 090"
+  },
+  {
+    "group": "callsign",
+    "spoken": "Virgin one five three speed two five zero",
+    "expected": "VIR153 S 250"
+  },
+  {
+    "group": "runway",
+    "spoken": "KLM seven one three runway two seven left",
+    "expected": "KLM713 R 27L"
+  },
+  {
+    "group": "runway",
+    "spoken": "KLM seven one three runway zero nine right",
+    "expected": "KLM713 R 09R"
+  },
+  {
+    "group": "numbers",
+    "spoken": "SVA111 speed two hundred and fifty knots",
+    "expected": "SVA111 S 250"
+  },
+  {
+    "group": "heading",
+    "spoken": "SVA111 heading zero one zero",
+    "expected": "SVA111 C 010"
+  },
+  {
+    "group": "altitude",
+    "spoken": "SVA111 flight level thirty",
+    "expected": "SVA111 C 3"
+  }
+]

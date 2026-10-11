@@ -103,12 +103,17 @@
       try{callsign(words.slice(0,index),context.callsigns);start=index;break;}catch{}
     }
     if(start<0)start=words.findIndex(w=>markers.has(w));
-    if(start<1)throw Error('Say the callsign followed by an instruction.');
-    const result=[callsign(words.slice(0,start),context.callsigns)];
+    if(start<1)throw Error('Callsign: say the callsign followed by an instruction.');
+    let selectedCallsign;
+    try{selectedCallsign=callsign(words.slice(0,start),context.callsigns);}
+    catch(error){throw Error(`Callsign: ${error.message}`);}
+    const result=[selectedCallsign];
     let i=start;
     while(i<words.length){
       if(words[i]==='and'){i++;continue;}
+      const instructionStart=i;
       let action=words[i++],level=false;
+      try{
       if(action==='climb'||action==='descend'||action==='decend'){
         while(['and','maintain','to'].includes(words[i]))i++;
         action='altitude';
@@ -161,6 +166,10 @@
       }
       if(action==='speed'){result.push('S',String(number(value)));continue;}
       throw Error(`Unrecognised instruction: ${action}.`);
+      }catch(error){
+        const label={altitude:'Altitude',flight:'Altitude',speed:'Speed',heading:'Heading / fix',direct:'Direct-to fix',runway:'Runway',landing:'Landing clearance',go:'Go-around'}[action]||'Instruction';
+        throw Error(`${label}: "${words.slice(instructionStart,i).join(' ')}" — ${error.message}`);
+      }
     }
     return result.join(' ');
   }
@@ -178,12 +187,31 @@
   window.ATCVoice={translate,resolveAlternatives};
   const input=document.getElementById('commandInput'),button=document.getElementById('voiceBtn'),status=document.getElementById('voiceStatus');
   if(!button)return;
+  let latestFeedback=null;
+  window.ATCVoice.getFeedback=()=>latestFeedback?{...latestFeedback}:null;
+  const diagnostics=[];
+  function recordAttempt(outcome,command='',alternative='',error=''){
+    diagnostics.push({time:new Date().toISOString(),outcome,heard:transcript,
+      alternatives:[...alternatives],command,matchedAlternative:alternative,error,
+      context:JSON.parse(JSON.stringify(window.getVoiceContext()))});
+    if(diagnostics.length>100)diagnostics.shift();
+  }
+  window.ATCVoice.getDiagnostics=()=>JSON.parse(JSON.stringify(diagnostics));
+  document.getElementById('voiceExportBtn').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify({version:1,attempts:diagnostics},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download='atc-voice-log.json';link.click();URL.revokeObjectURL(url);
+  });
+  function feedback({heard='',draft='',alternative='',error=''}={}){
+    latestFeedback={heard,draft,alternative,error};
+  }
   const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!Recognition){button.disabled=true;status.textContent='Voice unavailable in this browser. Try Chrome or Edge; typed commands still work.';return;}
   let recognition=null,transcript='',alternatives=[],previous='',busy=false,blocked=false,cancelled=false,failed=false;
   function start(){
-    if(busy||document.getElementById('helpDialog').open||document.getElementById('infoDialog').open)return;
+    if(busy||['helpDialog','infoDialog','settingsDialog'].some(id=>document.getElementById(id).open))return;
     previous=input.value;transcript='';alternatives=[];busy=true;blocked=true;cancelled=false;failed=false;
+    feedback();
     recognition=new Recognition();recognition.lang='en-GB';recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=5;
     status.textContent='Listening… speak, then release Q. Enter submits the draft.';button.setAttribute('aria-pressed','true');
     recognition.onresult=e=>{
@@ -195,21 +223,29 @@
       segments.forEach((segment,index)=>segment.slice(1).forEach(option=>{
         alternatives.push(segments.map((s,i)=>i===index?option:s[0]).join(' '));
       }));
-      input.value=transcript;status.textContent='Listening… '+transcript;
+      input.value=transcript;feedback({heard:transcript});status.textContent='Listening… '+transcript;
     };
-    recognition.onerror=e=>{failed=true;status.textContent=`Voice error: ${e.error}. Check microphone permission/connection and try again.`;transcript='';};
+    recognition.onerror=e=>{failed=true;status.textContent=`Voice error: ${e.error}. Check microphone permission/connection and try again.`;feedback({heard:transcript,error:status.textContent});recordAttempt('recognition-error','', '',status.textContent);transcript='';};
     recognition.onend=()=>{
       busy=false;button.setAttribute('aria-pressed','false');
-      if(!transcript||cancelled){input.value=previous;blocked=false;if(!failed)status.textContent=cancelled?'Voice cancelled.':'No speech detected. Hold Q to try again.';return;}
+      if(!transcript||cancelled){
+        if(!failed)recordAttempt(cancelled?'cancelled':'no-speech');
+        input.value=previous;blocked=false;
+        if(!failed){feedback({draft:previous});status.textContent=cancelled?'Voice cancelled.':'No speech detected. Hold Q to try again.';}
+        else latestFeedback.draft=previous;
+        return;
+      }
       try{
         const draft=resolveAlternatives(alternatives,window.getVoiceContext());
         input.value=draft.command;blocked=false;
-        status.textContent=`Heard: ${transcript}${draft.heard!==transcript?' — matched alternative: '+draft.heard:''} — draft ready. Check it, then Enter.`;
+        recordAttempt('translated',draft.command,draft.heard!==transcript?draft.heard:'');
+        feedback({heard:transcript,draft:draft.command,alternative:draft.heard!==transcript?draft.heard:''});
+        status.textContent=`${draft.heard!==transcript?'Used matched alternative. ':''}Draft ready. Check it, then Enter.`;
       }
-      catch(error){input.value=transcript;status.textContent=`${error.message} Edit the text into a command, or hold Q to retry.`;}
+      catch(error){input.value=transcript;feedback({heard:transcript,error:error.message});recordAttempt('translation-error','','',error.message);status.textContent=`${error.message} Edit the text into a command, or hold Q to retry.`;}
       input.focus();
     };
-    try{recognition.start();}catch(error){busy=false;blocked=false;status.textContent=error.message;button.setAttribute('aria-pressed','false');}
+    try{recognition.start();}catch(error){busy=false;blocked=false;feedback({error:error.message});recordAttempt('recognition-error','','',error.message);status.textContent=error.message;button.setAttribute('aria-pressed','false');}
   }
   function stop(){if(busy){status.textContent='Finishing recognition…';recognition.stop();}}
   // Q works even in the command box; ordinary typing resumes on key release.
@@ -223,7 +259,12 @@
   button.addEventListener('pointerup',stop);button.addEventListener('pointercancel',stop);
   button.addEventListener('keydown',e=>{if([' ','Enter'].includes(e.key)){e.preventDefault();if(!e.repeat)start();}});
   button.addEventListener('keyup',e=>{if([' ','Enter'].includes(e.key)){e.preventDefault();stop();}});
-  input.addEventListener('input',()=>{if(!busy)blocked=false;});
+  input.addEventListener('input',()=>{
+    if(!busy){
+      blocked=false;
+      if(latestFeedback){latestFeedback.draft=input.value;status.textContent='Draft edited. Check it, then Enter; the simulator validates submitted commands.';}
+    }
+  });
   document.getElementById('commandForm').addEventListener('submit',e=>{
     if(busy||blocked){e.preventDefault();e.stopImmediatePropagation();status.textContent=busy?'Release Q and wait for the draft before submitting.':'Correct the unrecognised speech before submitting.';}
   },true);

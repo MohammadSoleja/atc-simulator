@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ATC Simulator</title>
-  <link rel="stylesheet" href="{% static 'simulator/css/game.css' %}">
+  <link rel="stylesheet" href="{% static 'simulator/css/game.css' %}?v=compact-console">
   <script src="{% static 'simulator/js/theme.js' %}"></script>
 </head>
 <body>
@@ -65,12 +65,20 @@
     <div class="controls">
       <button id="pauseBtn">Pause</button>
       <button id="restartBtn">Restart</button>
-      <button id="themeBtn" type="button">Dark theme</button>
       <button id="helpBtn" type="button">Help</button>
       <button id="infoBtn" type="button">Info</button>
+      <button id="settingsBtn" type="button">Settings</button>
     </div>
   </footer>
 </div>
+<dialog id="settingsDialog" class="help-dialog" aria-labelledby="settingsTitle">
+  <div class="panel-title-row"><h2 id="settingsTitle">Settings</h2><button id="closeSettingsBtn" type="button">Close</button></div>
+  <h3>Appearance</h3>
+  <button id="themeBtn" type="button">Dark theme</button>
+  <h3>Voice diagnostics</h3>
+  <button id="voiceExportBtn" type="button">Download voice log</button>
+  <p>Exports the last 100 completed attempts from this tab. Text only; no audio. The log clears on reload.</p>
+</dialog>
 <dialog id="helpDialog" class="help-dialog">
   <div class="panel-title-row"><h2>Simulator help</h2><button id="closeHelpBtn" type="button">Close</button></div>
       <section class="help">
@@ -93,6 +101,7 @@
       </section>
   <p>Select an aircraft to fill in its callsign. Commands can be chained.</p>
   <p>Voice: hold Q or the Mic button and speak a callsign followed by instructions. Live speech appears in the command box; release to translate, then check and press Enter. Example: “Speedbird one two three, descend and maintain three thousand, reduce speed to one eight zero, heading two seven zero.” Airline names, spelled letters and phonetic letters are supported. Use “direct Whiskey Oscar Delta” for WOD. Microphone permission is required; your browser may send audio to its speech recognition service. Voice support depends on the browser.</p>
+  <p>Live transcription appears in the command box; release Q to review the command draft. Download voice log exports transcripts, alternatives and errors from this tab. Translation errors stay inline and identify the affected instruction. Edit the command box or record again, then check the draft before pressing Enter/Go. Translation does not mean the simulation has accepted a clearance.</p>
   <p>Normal (2×) is the default gameplay pace. The clock shows airport time from 06:00 and advances two minutes per real minute at Normal; 1× halves that rate, 4× doubles it, 8× quadruples it. Pause and Help stop both clock and aircraft.</p>
   <p>Dashed flight strips preview scheduled traffic 30 seconds before activation (at Normal). Countdown pauses with the game and scales with speed. Departures are blue on radar; arrivals are white. Amber marks selection and red marks conflicts.</p>
   <p>Traffic is arrival-heavy from 06:00–07:00, mixed during the day and quieter late at night. This is a simplified Heathrow-inspired pattern, with gradual buildup and traffic caps.</p>

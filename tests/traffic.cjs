@@ -96,7 +96,7 @@ for(const [kind,random] of [['arrival',.1],['departure',.9]]){
   engine.setSimulationRate(1);engine.advanceSimulation(10);
   assert.ok(Math.abs(state.trafficElapsed-305)<1e-7);
   engine.renderStrips();assert.match(element('strips').children.at(-1).innerHTML,/Coming in 25s/);
-  for(const dialog of ['help','info']){
+  for(const dialog of ['help','info','settings']){
     const before=plain({clock:state.clockElapsed,traffic:state.trafficElapsed,upcoming:state.upcoming});
     element(`${dialog}Btn`).onclick();engine.advanceSimulation(10);
     assert.deepEqual(plain({clock:state.clockElapsed,traffic:state.trafficElapsed,upcoming:state.upcoming}),before);
