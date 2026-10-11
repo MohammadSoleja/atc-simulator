@@ -1,29 +1,6 @@
-const fs = require('node:fs');
-const vm = require('node:vm');
 const assert = require('node:assert/strict');
-const elements = new Map();
-function element(id) {
-  if (!elements.has(id)) elements.set(id, {
-    width: 1100, height: 760, value: id === 'trafficRate' ? '22' : '',
-    scrollTop: 0, classList: {add(){},remove(){}},
-    parentElement: {getBoundingClientRect: () => ({width:1100,height:760})},
-    handlers: {}, addEventListener(type,fn){this.handlers[type]=fn;},
-    showModal(){this.open=true;},close(){this.open=false;this.handlers.close?.();},
-    focus(){}, appendChild(){}, getContext: () => ({})
-  });
-  return elements.get(id);
-}
-const context = vm.createContext({
-  document: {getElementById: element, querySelectorAll: () => [], createElement: () => ({appendChild(){}})},
-  ResizeObserver: class {observe(){}}, window: {addEventListener(){}}, performance: {now: () => 0}, requestAnimationFrame(){}
-});
-let source = fs.readFileSync(process.argv[2] || require('node:path').resolve(__dirname, '../simulator/static/simulator/js/game.js'), 'utf8');
-// Expose the real engine only inside this isolated verification harness.
-source = source.replace('  reset();resize();renderStrips();requestAnimationFrame(frame);',
-  '  globalThis.engine={reset,parseCommand,update,spawnArrival,spawnDeparture,cleanup,runways,fixes,distance,checkSeparation,trafficPattern,timeOfDaySeconds,setSimulationRate,getSimulationRate:()=>simulationRate,updateUI,getState:()=>state}; reset();');
-vm.runInContext(fs.readFileSync('simulator/static/simulator/js/airlines.js','utf8'),context);
-vm.runInContext(source, context);
-const engine = context.engine;
+const vm = require('node:vm');
+const {engine,element,context} = require('./harness.cjs').createEngine(process.argv[2]);
 
 engine.reset();
 let a=engine.getState().aircraft[0];

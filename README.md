@@ -193,6 +193,10 @@ and labels, at low opacity, and never intercepts selection clicks.
 
 ## Simulation regression checks
 
+For G01–G03, run `node tests/core.cjs` for focused landing, separation and
+departure/handoff acceptance scenarios. See [core gameplay rules and playtest
+checklist](docs/gameplay-rules.md) for exact conditions and individual commands.
+
 If Node.js is available, run `node tests/simulation.cjs`. This isolated test harness
 checks command readbacks, all four runway approaches, near-aligned localizer
 capture, touchdown beyond the threshold, missed interceptions, scoring, gradual

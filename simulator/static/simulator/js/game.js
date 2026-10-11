@@ -208,6 +208,17 @@
     return `${action} ${a.targetAltitude.toLocaleString('en-GB')} ft`;
   }
 
+  function goAround(a){
+    if(a.kind!=='arrival'||a.phase!=='airborne'||a.landed||a.removeAt!==undefined){
+      say(`${a.callsign}: go-around requires an airborne arrival.`,true);return false;
+    }
+    a.clearedToLand=null;a.approachCaptured=false;a.nav=null;
+    a.targetAltitude=Math.max(3000,a.targetAltitude);
+    a.targetSpeed=Math.max(190,a.targetSpeed);
+    a.targetHeading=normalizeHeading(a.heading+30);
+    return `go around, ${altitudeReadback(a)}, heading ${Math.round(a.targetHeading)}°, speed ${a.targetSpeed} kt`;
+  }
+
   function runwayPosition(a,rw){
     const rad=rw.heading*Math.PI/180;
     const dx=(rw.x1-a.x)*sector.width,dy=(rw.y1-a.y)*sector.height;
@@ -273,7 +284,7 @@
       else if((cmd==='D'||cmd==='DIRECT') && i<t.length){const f=findFix(t[i++]); if(f){a.nav=f;readback.push(`head direct to ${f.id}`);} else return say('Unknown fix.',true);}
       else if((cmd==='L'||cmd==='LAND') && i<t.length){const result=clearToLand(a,t[i++]);if(!result)return;readback.push(result);}
       else if(cmd==='T'||cmd==='TO'){if(!takeoff(a))return;readback.push(`cleared for takeoff runway ${a.runway}`);}
-      else if(cmd==='G'||cmd==='GA'){a.clearedToLand=null;a.approachCaptured=false;a.nav=null;a.targetAltitude=Math.max(3000,a.targetAltitude);a.targetSpeed=Math.max(190,a.targetSpeed);a.targetHeading=normalizeHeading(a.heading+30);a.phase='airborne';readback.push(`go around, ${altitudeReadback(a)}, heading ${Math.round(a.targetHeading)}°, speed ${a.targetSpeed} kt`);}
+      else if(cmd==='G'||cmd==='GA'){const result=goAround(a);if(!result)return;readback.push(result);}
       else return say(`Unknown/incomplete command: ${cmd}`,true);
     }
     say(`${a.callsign}: ${readback.length?readback.join(', '):'no instructions provided'}.`); selectAircraft(a);
@@ -419,7 +430,9 @@
 
   function checkSeparation(){
     const current=new Set(); let alert=[];
-    const air=state.aircraft.filter(a=>a.phase!=='holding'&&!a.landed);
+    // Completed handoffs and sector exits are inactive immediately, before
+    // the frame's cleanup removes their records from the aircraft list.
+    const air=state.aircraft.filter(a=>a.phase!=='holding'&&!a.landed&&a.removeAt===undefined);
     for(let i=0;i<air.length;i++)for(let j=i+1;j<air.length;j++){
       const a=air[i],b=air[j], key=[a.id,b.id].sort((x,y)=>x-y).join('-');
       if(!isParallelRunwayOperation(a,b) && !isParallelFinalPair(a,b) && distance(a,b)<3 && Math.abs(a.altitude-b.altitude)<1000){
