@@ -1,0 +1,45 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Welcome | ATC Simulator</title>
+  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}">
+  <script src="{% static 'simulator/js/theme.js' %}"></script>
+</head>
+<body>
+  <header class="site-header"><span class="brand">ATC SIMULATOR</span><div class="header-actions"><span class="edition">Browser-based air traffic control</span><button id="themeBtn" type="button">Dark theme</button></div></header>
+  <main>
+    <section class="intro" aria-labelledby="welcome-title">
+      <p class="eyebrow">Take control of the traffic</p>
+      <h1 id="welcome-title">Welcome to the approach desk.</h1>
+      <p class="lead">Guide arrivals to the runway, clear departures for takeoff and keep aircraft safely separated. Manage the flow with headings, altitudes and speeds.</p>
+    </section>
+    <section class="airport-card" aria-labelledby="airport-title">
+      <div class="airport-details">
+        <p class="eyebrow">EGLL · United Kingdom</p>
+        <h2 id="airport-title">London Heathrow</h2>
+        <p>Two parallel runways. A busy London approach. Start with a manageable flow of aircraft and build your rhythm as traffic arrives.</p>
+        <a class="start-button" href="{% url 'index' %}">Start game <span aria-hidden="true">→</span></a>
+        <p class="session-note">Starts a new session. No account required.</p>
+      </div>
+      <div class="scope-preview" aria-hidden="true">
+        <svg viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="180" cy="120" r="94"/><circle cx="180" cy="120" r="48"/>
+          <path class="approach-lines" d="M22 111H338 M22 129H338"/>
+          <path class="runways" d="M154 111H206 M154 129H206"/>
+          <path class="trail" d="M285 68L258 88 M80 182L104 164"/>
+          <rect class="target" x="254" y="84" width="7" height="7"/>
+          <rect class="target" x="100" y="160" width="7" height="7"/>
+          <text x="142" y="103" text-anchor="end">09L</text><text x="219" y="103">27R</text>
+          <text x="142" y="145" text-anchor="end">09R</text><text x="219" y="145">27L</text>
+        </svg>
+        <span>Heathrow approach</span>
+      </div>
+    </section>
+    <p class="getting-started">New to the desk? Open <strong>Help</strong> inside the simulator for commands and instructions. You can pause at any time.</p>
+  </main>
+  <footer>Built for learning and play.</footer>
+</body>
+</html>
