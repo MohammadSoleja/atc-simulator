@@ -39,3 +39,11 @@ configuration checks. Full HTTPS/production configuration is deferred until
 hosting work; the development server must remain bound to loopback.
 
 Reference: https://www.djangoproject.com/weblog/2026/oct/06/security-releases/
+
+## Account follow-up — 12 October 2026
+
+A01/A02 introduce Django users and database sessions. Local signing keys now
+persist in ignored `.django-secret-key` (created with owner-only permissions),
+so restarting the server does not log players out. Production still requires
+an explicit secret and HTTPS cookies. The local database now contains Django
+auth/session tables. Public deployment still requires login abuse controls.
