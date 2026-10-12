@@ -347,7 +347,7 @@ tables in your ignored local SQLite database. Welcome-page links open
 `/accounts/register/` and `/accounts/login/`. Registration requires a username,
 valid email address, and a confirmed password meeting Django's validators;
 successful registration signs the player in. Login uses username and password.
-Email verification and password reset are not implemented in these tickets.
+Email verification is not implemented. Password reset is available via A04.
 Email addresses are not unique identifiers in this initial Django user model.
 
 Logout uses a CSRF-protected POST form. Guests can still open `/play/` without
@@ -373,3 +373,32 @@ Choose the username, email and password in your terminal, then sign in at
 `http://127.0.0.1:8000/admin/` (or the port your server uses). Normal player
 registration does not grant staff or administrator privileges. Restart the
 server after enabling the admin application.
+
+
+### Display names and password reset (A03 / A04)
+
+Signed-in players can open **Edit display name** from the welcome header.
+Display names are stored in Django's user `first_name` field, separately from
+login usernames. They must contain 1–80 characters after trimming whitespace.
+Accounts without a display name continue to show their username. No additional
+profile table or migration is needed. Future licence pages can use the same name.
+
+**Forgot your password?** on the login page opens the reset flow. Reset links
+expire after one hour and stop working after the password changes. Requests show
+an identical confirmation for existing and unknown email addresses. Django sends
+links only to active accounts with usable passwords. Email is not unique in the
+current user model; if several eligible accounts share an address, Django sends
+an account-specific link for each. Login remains username-based.
+
+Local development uses the console email backend: submit an existing account's
+email, copy the reset URL from the runserver terminal, open it, choose a new
+password, and log in. No email is sent externally in this mode.
+
+For future SMTP delivery, configure these environment variables (never commit
+credentials): `DJANGO_EMAIL_BACKEND` (SMTP backend by default when debug is off),
+`DJANGO_DEFAULT_FROM_EMAIL`, `DJANGO_EMAIL_HOST`, `DJANGO_EMAIL_PORT` (587),
+`DJANGO_EMAIL_HOST_USER`, `DJANGO_EMAIL_HOST_PASSWORD`, and
+`DJANGO_EMAIL_USE_TLS` (true). The sender/domain and mail provider must be set
+before deploying; console output is only for local testing. Public hosting also
+needs abuse controls for login and reset requests. Password reset does not
+sign the player in automatically.

@@ -101,3 +101,15 @@ button.account-link { background:none; border:0; padding:0; font:inherit; font-s
 [data-theme="dark"] .account-card { background:#1c2b36; }
 [data-theme="dark"] .account-field input { background:#233440; }
 [data-theme="dark"] .form-errors { color:#ffb2bc; }
+
+/* Keep account actions out of the welcome header until requested. */
+.account-dropdown { position:relative; }
+.account-toggle { border:0; background:transparent; color:var(--accent); font:inherit; font-size:14px; cursor:pointer; padding:8px 0 8px 12px; max-width:240px; overflow-wrap:anywhere; }
+.account-toggle:focus-visible, .account-options a:focus-visible, .account-options button:focus-visible { outline:2px solid #3d8eb8; outline-offset:2px; }
+.account-options { position:absolute; right:0; top:100%; min-width:190px; max-width:calc(100vw - 40px); padding:6px; background:white; border:1px solid var(--line); border-radius:8px; box-shadow:0 8px 24px #0002; z-index:10; }
+.account-options[hidden] { display:none; }
+.account-options a, .account-options button, .account-options #themeBtn { display:block; width:100%; margin:0; padding:10px 12px; border:0; border-radius:4px; background:transparent; color:var(--text); text-align:left; text-decoration:none; font:inherit; font-size:13px; cursor:pointer; }
+.account-options a:hover, .account-options button:hover { background:#e7eff5; }
+[data-theme="dark"] .account-options { background:#1c2b36; }
+[data-theme="dark"] .account-options #themeBtn { background:transparent; color:var(--text); }
+[data-theme="dark"] .account-options a:hover, [data-theme="dark"] .account-options button:hover { background:#2c4352; }

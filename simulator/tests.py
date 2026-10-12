@@ -163,3 +163,113 @@ class AdminAccessTests(TestCase):
         response = self.client.get(reverse('admin:auth_user_changelist'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'admin_test')
+
+
+class DisplayNameTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            'controller', 'controller@example.com', 'Example-Password-987!')
+        self.other = get_user_model().objects.create_user('other', first_name='Other pilot')
+
+    def test_profile_requires_login(self):
+        for name in ['profile', 'profile_saved']:
+            self.assertEqual(self.client.get(reverse(name)).status_code, 302)
+        self.assertEqual(self.client.post(reverse('profile'), {'first_name': 'Changed'}).status_code, 302)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, '')
+
+    def test_edit_only_own_display_name_and_keep_username(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse('profile'), {
+            'first_name': '  Approach Desk  ', 'username': 'hijacked', 'id': self.other.pk})
+        self.assertRedirects(response, reverse('profile_saved'))
+        self.user.refresh_from_db(); self.other.refresh_from_db()
+        self.assertEqual(self.user.first_name, 'Approach Desk')
+        self.assertEqual(self.user.username, 'controller')
+        self.assertEqual(self.other.first_name, 'Other pilot')
+        self.assertContains(self.client.get('/'), 'Approach Desk')
+        self.assertContains(self.client.get(reverse('profile')), 'Approach Desk')
+
+    def test_invalid_names_are_rejected_and_html_is_escaped(self):
+        self.client.force_login(self.user)
+        for name in ['', '   ', 'x' * 81]:
+            response = self.client.post(reverse('profile'), {'first_name': name})
+            self.assertIn('first_name', response.context['form'].errors)
+        self.client.post(reverse('profile'), {'first_name': '<script>alert(1)</script>'})
+        response = self.client.get('/')
+        self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+
+    def test_username_fallback_and_csrf(self):
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get('/'), 'controller')
+        client = Client(enforce_csrf_checks=True); client.force_login(self.user)
+        self.assertEqual(client.post(reverse('profile'), {'first_name': 'Blocked'}).status_code, 403)
+
+
+class PasswordResetTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            'controller', 'controller@example.com', 'Original-Password-987!')
+
+    def request_link(self):
+        import re
+        from django.core import mail
+        self.client.post(reverse('password_reset'), {'email': self.user.email})
+        return re.search(r'http://testserver(/accounts/reset/\S+)', mail.outbox[-1].body).group(1)
+
+    def test_reset_changes_password_and_link_is_single_use(self):
+        link = self.request_link()
+        response = self.client.get(link)
+        self.assertEqual(response.status_code, 302)
+        safe_url = response.url
+        self.assertNotEqual(safe_url, link, 'Django removes the token from the browser URL')
+        self.assertContains(self.client.get(safe_url), 'Save new password')
+        password = 'Replacement-Password-654!'
+        response = self.client.post(safe_url, {'new_password1': password, 'new_password2': password})
+        self.assertRedirects(response, reverse('password_reset_complete'))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(password))
+        self.assertFalse(self.user.check_password('Original-Password-987!'))
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertContains(Client().get(link), 'invalid, expired, or has already been used')
+        self.assertContains(self.client.get(safe_url), 'invalid, expired, or has already been used')
+        self.assertTrue(self.client.login(username='controller', password=password))
+
+    def test_request_does_not_reveal_whether_email_exists(self):
+        from django.core import mail
+        get_user_model().objects.create_user('inactive', 'inactive@example.com', 'Example-987!', is_active=False)
+        get_user_model().objects.create_user('unusable', 'unusable@example.com')
+        known = self.client.post(reverse('password_reset'), {'email': self.user.email})
+        self.assertEqual(len(mail.outbox), 1)
+        for email in ['unknown@example.com', 'inactive@example.com', 'unusable@example.com']:
+            response = self.client.post(reverse('password_reset'), {'email': email})
+            self.assertEqual(response.status_code, known.status_code)
+            self.assertEqual(response.url, known.url)
+            self.assertEqual(len(mail.outbox), 1)
+
+    def test_expired_and_malformed_links_cannot_reset(self):
+        from datetime import timedelta
+        from unittest.mock import patch
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.encoding import force_bytes
+        from django.utils.http import urlsafe_base64_encode
+        now = default_token_generator._now()
+        token = default_token_generator.make_token(self.user)
+        url = reverse('password_reset_confirm', kwargs={
+            'uidb64': urlsafe_base64_encode(force_bytes(self.user.pk)), 'token': token})
+        with patch.object(default_token_generator, '_now', return_value=now + timedelta(hours=2)):
+            self.assertContains(self.client.get(url), 'invalid, expired, or has already been used')
+        self.assertContains(self.client.get('/accounts/reset/bad/bad/'), 'invalid, expired, or has already been used')
+
+    def test_password_validation_and_csrf(self):
+        link = self.request_link(); safe_url = self.client.get(link).url
+        response = self.client.post(safe_url, {'new_password1': '123', 'new_password2': '123'})
+        self.assertTrue(response.context['form'].errors)
+        response = self.client.post(safe_url, {'new_password1': 'Replacement-987!', 'new_password2': 'Mismatch-987!'})
+        self.assertTrue(response.context['form'].errors)
+        self.user.refresh_from_db(); self.assertTrue(self.user.check_password('Original-Password-987!'))
+        csrf_client = Client(enforce_csrf_checks=True)
+        self.assertEqual(csrf_client.post(reverse('password_reset'), {'email': self.user.email}).status_code, 403)
+        token_url = csrf_client.get(link).url
+        self.assertEqual(csrf_client.post(token_url, {'new_password1': 'Replacement-987!', 'new_password2': 'Replacement-987!'}).status_code, 403)

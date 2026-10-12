@@ -5,15 +5,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Welcome | ATC Simulator</title>
-  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}">
+  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}?v=account-dropdown">
   <script src="{% static 'simulator/js/theme.js' %}"></script>
 </head>
 <body>
-  <header class="site-header"><span class="brand">ATC SIMULATOR</span><div class="header-actions"><span class="edition">Browser-based air traffic control</span>{% if user.is_authenticated %}
-    <span class="account-name">{{ user.username }}</span>
-    <form action="{% url 'logout' %}" method="post" class="logout-form">{% csrf_token %}<button type="submit" class="account-link">Log out</button></form>
-    {% else %}<a class="account-link" href="{% url 'login' %}">Log in</a><a class="account-link" href="{% url 'register' %}">Create account</a>{% endif %}
-    <button id="themeBtn" type="button">Dark theme</button></div></header>
+  <header class="site-header">
+    <span class="brand">ATC SIMULATOR</span>
+    <div class="header-actions">
+      <span class="edition">Browser-based air traffic control</span>
+      <div class="account-dropdown" id="accountDropdown">
+        <button class="account-toggle" id="accountToggle" type="button" aria-expanded="false" aria-controls="accountOptions">
+          {% if user.is_authenticated %}{{ user.first_name|default:user.username }}{% else %}Guest{% endif %}<span aria-hidden="true"> ▾</span>
+        </button>
+        <div class="account-options" id="accountOptions" hidden>
+          <button id="themeBtn" type="button">Dark theme</button>
+          {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}">Edit display name</a>
+            <form action="{% url 'logout' %}" method="post" class="logout-form">{% csrf_token %}<button type="submit">Log out</button></form>
+          {% else %}
+            <a href="{% url 'login' %}">Log in</a>
+            <a href="{% url 'register' %}">Create account</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+  <script src="{% static 'simulator/js/account-menu.js' %}" defer></script>
   <main>
     <section class="intro" aria-labelledby="welcome-title">
       <p class="eyebrow">Take control of the traffic</p>

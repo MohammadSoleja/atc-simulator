@@ -30,6 +30,7 @@
         <button class="start-button" type="submit">{% if registering %}Create account{% else %}Log in{% endif %}</button>
       </form>
       <p class="account-note">{% if registering %}Already registered? <a href="{% url 'login' %}">Log in</a>.{% else %}New here? <a href="{% url 'register' %}">Create account</a>.{% endif %}</p>
+      {% if not registering %}<p class="account-note"><a href="{% url 'password_reset' %}">Forgot your password?</a></p>{% endif %}
       <a class="guest-link" href="{% url 'welcome' %}">Continue as a guest</a>
     </section>
   </main>
