@@ -1,9 +1,10 @@
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
-from .forms import RegistrationForm
+from .forms import DisplayNameForm, RegistrationForm
 from django.http import Http404
 
 
@@ -37,3 +38,24 @@ def register(request):
     return render(request, 'simulator/account.html', {
         'form': form, 'registering': True,
     })
+
+
+@login_required
+@require_http_methods(['GET', 'POST'])
+def profile(request):
+    # Bind only the authenticated user; never accept an account ID from input.
+    form = DisplayNameForm(
+        request.POST if request.method == 'POST' else None, instance=request.user,
+    )
+    if request.method == 'POST' and form.is_valid():
+        user = form.save(commit=False)
+        user.save(update_fields=['first_name'])
+        return redirect('profile_saved')
+    return render(request, 'simulator/profile.html', {'form': form})
+
+
+@login_required
+@require_http_methods(['GET'])
+def profile_saved(request):
+    form = DisplayNameForm(instance=request.user)
+    return render(request, 'simulator/profile.html', {'form': form, 'saved': True})

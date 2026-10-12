@@ -1,0 +1,19 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} | ATC Simulator</title>
+  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}">
+  <script src="{% static 'simulator/js/theme.js' %}"></script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="{% url 'welcome' %}">ATC SIMULATOR</a><button id="themeBtn" type="button">Dark theme</button></header>
+  <main class="account-main"><section class="account-card" aria-labelledby="account-title">
+    <p class="eyebrow">Your controller account</p>
+    {% block content %}{% endblock %}
+    <p><a class="guest-link" href="{% url 'welcome' %}">Back to welcome page</a></p>
+  </section></main>
+</body>
+</html>
