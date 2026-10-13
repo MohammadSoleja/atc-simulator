@@ -402,3 +402,20 @@ credentials): `DJANGO_EMAIL_BACKEND` (SMTP backend by default when debug is off)
 before deploying; console output is only for local testing. Public hosting also
 needs abuse controls for login and reset requests. Password reset does not
 sign the player in automatically.
+
+### Saved games (S01–S06)
+
+Run `python manage.py migrate` after updating. Signed-in players have **Save game**
+in the simulator and **Saved games** in the welcome dropdown and simulator
+Settings. Manual saves are named checkpoints; Continue loads them paused.
+The saved-games page supports rename and confirmed deletion. Guests can still
+play without signing in.
+
+Autosave updates one separate account-owned slot after each 60 seconds of active
+play, regardless of pace. Check Settings for status. Manual saves are preserved;
+use Save game before leaving because closing a tab does not guarantee a save.
+Loading failures stay paused and cannot overwrite the autosave until Restart.
+No cumulative account statistics are implemented by these tickets.
+
+See [save-format.md](docs/save-format.md) for the versioned format, validation,
+limits, ownership rules and playtest steps.

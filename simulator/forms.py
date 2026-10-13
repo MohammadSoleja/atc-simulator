@@ -20,3 +20,7 @@ class DisplayNameForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('first_name',)
+
+
+class SaveNameForm(forms.Form):
+    name = forms.CharField(max_length=80, label='Save name')

@@ -113,3 +113,6 @@ button.account-link { background:none; border:0; padding:0; font:inherit; font-s
 [data-theme="dark"] .account-options { background:#1c2b36; }
 [data-theme="dark"] .account-options #themeBtn { background:transparent; color:var(--text); }
 [data-theme="dark"] .account-options a:hover, [data-theme="dark"] .account-options button:hover { background:#2c4352; }
+.saved-game { padding:16px 0; border-top:1px solid var(--line); }
+.saved-game h2 { font-size:19px; overflow-wrap:anywhere; }
+.save-actions { display:flex; flex-wrap:wrap; gap:18px; font-size:14px; }

@@ -21,7 +21,7 @@ function createEngine(sourcePath) {
   }
   const context = vm.createContext({
     document:{getElementById:element,querySelectorAll:()=>[],createElement:()=>({children:[],appendChild(child){this.children.push(child);}})},
-    ResizeObserver:class {observe(){}},window:{addEventListener(){}},
+    ResizeObserver:class {observe(){}},window:{addEventListener(){},crypto:{randomUUID:()=>'12345678-1234-4234-8234-123456789012'}},
     performance:{now:()=>0},requestAnimationFrame(){}
   });
   // Reproducible aircraft types and callsigns, including the legacy suite.
@@ -31,6 +31,7 @@ function createEngine(sourcePath) {
   if(!source.includes(startup))throw Error('Engine startup changed; update test harness hooks.');
   source=source.replace(startup,'globalThis.engine={reset,parseCommand,update,advanceSimulation,spawnArrival,spawnDeparture,cleanup,runways,fixes,distance,checkSeparation,trafficPattern,timeOfDaySeconds,setSimulationRate,getSimulationRate:()=>simulationRate,updateUI,renderStrips,runwayPosition,airport,profile,getState:()=>state}; reset();');
   vm.runInContext(fs.readFileSync(path.join(__dirname,'../simulator/static/simulator/js/airlines.js'),'utf8'),context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'../simulator/static/simulator/js/save-format.js'),'utf8'),context);
   vm.runInContext(source,context);
   return {engine:context.engine,element,context};
 }

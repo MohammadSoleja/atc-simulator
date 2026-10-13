@@ -1,0 +1,18 @@
+{% extends 'simulator/account_base.html' %}
+{% block title %}Saved games{% endblock %}
+{% block content %}
+<h1 id="account-title">Saved games</h1>
+<p><a href="{% url 'index' %}">Start a new game</a></p>
+{% if load_error %}<p role="alert">Saved games could not be loaded. Please try again.</p><p><a href="{% url 'saved_games' %}">Retry</a></p>
+{% else %}
+{% for save in saves %}
+<article class="saved-game">
+  <h2>{{ save.name }}{% if save.is_autosave %} · Auto{% endif %}</h2>
+  <p class="account-note">{% if save.airport == 'egll' %}London Heathrow (EGLL){% else %}{{ save.airport }}{% endif %}<br>{{ save.saved_at|date:'d M Y, H:i' }} UTC</p>
+  <p class="save-actions"><a href="{% url 'index' %}?map={{ save.airport|urlencode }}&amp;save={{ save.pk }}">Continue</a>
+  {% if not save.is_autosave %}<a href="{% url 'rename_save' save.pk %}">Rename</a>{% endif %}
+  <a href="{% url 'delete_save' save.pk %}">Delete</a></p>
+</article>
+{% empty %}<p>No saved games yet. Start a game and choose Save game.</p>{% endfor %}
+{% endif %}
+{% endblock %}

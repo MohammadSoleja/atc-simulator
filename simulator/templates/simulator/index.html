@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ATC Simulator</title>
-  <link rel="stylesheet" href="{% static 'simulator/css/game.css' %}?v=compact-console">
+  <link rel="stylesheet" href="{% static 'simulator/css/game.css' %}?v=saved-games">
   <script src="{% static 'simulator/js/theme.js' %}"></script>
 </head>
 <body>
@@ -67,12 +67,24 @@
       <button id="restartBtn">Restart</button>
       <button id="helpBtn" type="button">Help</button>
       <button id="infoBtn" type="button">Info</button>
+      {% if user.is_authenticated %}<button id="saveBtn" type="button">Save game</button>{% endif %}
       <button id="settingsBtn" type="button">Settings</button>
     </div>
   </footer>
 </div>
+{% if user.is_authenticated %}
+<dialog id="saveDialog" class="help-dialog" aria-labelledby="saveTitle">
+  <div class="panel-title-row"><h2 id="saveTitle">Save game</h2><button id="closeSaveBtn" type="button">Cancel</button></div>
+  <form id="saveForm"><label for="saveName">Save name</label><input id="saveName" name="name" maxlength="80" required>
+    <button id="confirmSaveBtn" type="submit">Save</button></form>
+  <p id="saveFeedback" role="status"></p>
+</dialog>
+{% endif %}
 <dialog id="settingsDialog" class="help-dialog" aria-labelledby="settingsTitle">
   <div class="panel-title-row"><h2 id="settingsTitle">Settings</h2><button id="closeSettingsBtn" type="button">Close</button></div>
+  {% if user.is_authenticated %}<h3>Saved games</h3>
+  <p><a href="{% url 'saved_games' %}">View saved games</a></p>
+  <p id="autosaveStatus" role="status">Autosave every 60 seconds of active play; manual saves are separate.</p>{% endif %}
   <h3>Appearance</h3>
   <button id="themeBtn" type="button">Dark theme</button>
   <h3>Voice diagnostics</h3>
@@ -129,7 +141,13 @@
 <script src="{% static 'simulator/js/airlines.js' %}"></script>
 <script src="{% static 'simulator/js/map-data.js' %}"></script>
 <script src="{% static 'simulator/js/readbacks.js' %}"></script>
+<script src="{% static 'simulator/js/save-format.js' %}"></script>
 <script src="{% static 'simulator/js/game.js' %}"></script>
+{% if user.is_authenticated %}
+<form id="saveCsrf" hidden>{% csrf_token %}</form>
+<div id="saveConfig" hidden data-create-url="{% url 'save_game' %}" {% if save_id %}data-load-url="{% url 'load_game' save_id %}"{% endif %}></div>
+<script src="{% static 'simulator/js/saves.js' %}"></script>
+{% endif %}
 <script src="{% static 'simulator/js/info.js' %}"></script>
 <script src="{% static 'simulator/js/voice.js' %}"></script>
 </body>

@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Welcome | ATC Simulator</title>
-  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}?v=account-dropdown">
+  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}?v=saved-games">
   <script src="{% static 'simulator/js/theme.js' %}"></script>
 </head>
 <body>
@@ -20,6 +20,7 @@
         <div class="account-options" id="accountOptions" hidden>
           <button id="themeBtn" type="button">Dark theme</button>
           {% if user.is_authenticated %}
+            <a href="{% url 'saved_games' %}">Saved games</a>
             <a href="{% url 'profile' %}">Edit display name</a>
             <form action="{% url 'logout' %}" method="post" class="logout-form">{% csrf_token %}<button type="submit">Log out</button></form>
           {% else %}

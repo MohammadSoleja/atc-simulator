@@ -22,7 +22,20 @@ def index(request):
     map_id = request.GET.get('map', 'egll')
     if map_id not in {airport['id'] for airport in AVAILABLE_MAPS}:
         raise Http404('This map is not available.')
-    return render(request, 'simulator/index.html')
+    save_id = request.GET.get('save')
+    if save_id:
+        if not request.user.is_authenticated:
+            from django.contrib.auth.views import redirect_to_login
+            return redirect_to_login(request.get_full_path())
+        from .save_views import owned_save
+        try:
+            save_id = int(save_id)
+        except ValueError:
+            raise Http404('This save is not available.')
+        save = owned_save(request, save_id)
+        if save.airport != map_id:
+            raise Http404('This save belongs to another airport.')
+    return render(request, 'simulator/index.html', {'save_id': save_id})
 
 
 @sensitive_post_parameters('password1', 'password2')
