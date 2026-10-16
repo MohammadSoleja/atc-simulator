@@ -1,10 +1,12 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.db import DatabaseError
 from django.shortcuts import redirect, render
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods
 
 from .forms import DisplayNameForm, RegistrationForm
+from .models import SavedGame
 from django.http import Http404
 
 
@@ -15,7 +17,15 @@ AVAILABLE_MAPS = [
 
 
 def welcome(request):
-    return render(request, 'simulator/welcome.html', {'maps': AVAILABLE_MAPS})
+    context = {'maps': AVAILABLE_MAPS}
+    if request.user.is_authenticated:
+        try:
+            # Welcome needs only three checkpoints' metadata, never their snapshots.
+            context['recent_saves'] = list(SavedGame.objects.filter(owner=request.user)
+                .only('name', 'airport', 'saved_at', 'is_autosave')[:3])
+        except DatabaseError:
+            context['recent_saves_error'] = True
+    return render(request, 'simulator/welcome.html', context)
 
 
 def index(request):
