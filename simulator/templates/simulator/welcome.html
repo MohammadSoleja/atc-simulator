@@ -1,3 +1,4 @@
+{% load tz %}
 {% load static %}
 <!doctype html>
 <html lang="en">
@@ -5,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Welcome | ATC Simulator</title>
-  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}?v=saved-games">
+  <link rel="stylesheet" href="{% static 'simulator/css/welcome.css' %}?v=recent-saves">
   <script src="{% static 'simulator/js/theme.js' %}"></script>
 </head>
 <body>
@@ -67,6 +68,32 @@
         <span>Heathrow approach</span>
       </div>
     </section>
+    {% if user.is_authenticated %}
+    <section class="recent-saves" aria-labelledby="recent-saves-title">
+      <div class="recent-saves-heading">
+        <h2 id="recent-saves-title">Your recent saves</h2>
+        <div class="recent-saves-actions"><a href="{% url 'index' %}">New game</a><a href="{% url 'saved_games' %}">View all saves</a></div>
+      </div>
+      {% if recent_saves_error %}
+        <p role="alert">Recent saves could not be loaded. <a href="{% url 'welcome' %}">Try again</a>.</p>
+      {% else %}
+        <ul class="recent-saves-list">
+        {% for save in recent_saves %}
+          <li>
+            <div class="recent-save-details">
+              <h3>{{ save.name }}</h3>
+              <p>{% if save.airport == 'egll' %}London Heathrow (EGLL){% else %}{{ save.airport }}{% endif %}
+                · <time datetime="{{ save.saved_at|utc|date:'c' }}">{{ save.saved_at|utc|date:'d M Y, H:i' }} UTC</time></p>
+            </div>
+            <a class="continue-save" href="{% url 'index' %}?map={{ save.airport|urlencode }}&amp;save={{ save.pk }}" aria-label="Continue {{ save.name }}">Continue</a>
+          </li>
+        {% empty %}
+          <li class="recent-saves-empty">No saved games yet. Start a new game and choose Save game to continue later.</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+    {% endif %}
     <section class="quick-start" aria-labelledby="quick-start-title">
       <div class="guide-heading"><h2 id="quick-start-title">Your first few instructions</h2><span>No need to memorise everything</span></div>
       <p>Select a map and start whenever you’re ready. Your job is to sequence arrivals, release departures and keep traffic separated. <strong>Help</strong> inside the game pauses the simulation while you check the commands.</p>

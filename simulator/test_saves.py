@@ -149,7 +149,7 @@ class SavedGameTests(TestCase):
     def test_database_failure_has_useful_feedback(self):
         from unittest.mock import patch
         from django.db import DatabaseError
-        with patch('simulator.save_views.SavedGame.objects.filter', side_effect=DatabaseError):
+        with patch('simulator.save_views.SavedGame.objects.only', side_effect=DatabaseError):
             response = self.client.get(reverse('saved_games'))
         self.assertEqual(response.status_code, 503)
         self.assertContains(response, 'Saved games could not be loaded', status_code=503)
@@ -167,3 +167,84 @@ class SavedGameTests(TestCase):
         new_pk = self.save_request(autosave=True).json()['id']
         self.assertNotEqual(pk, new_pk)
         self.assertEqual(SavedGame.objects.filter(is_autosave=True, owner=self.user).count(), 1)
+
+
+class WelcomeRecentSaveTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user('welcome_owner')
+        self.other = get_user_model().objects.create_user('welcome_other')
+
+    def save(self, name, owner=None, **kwargs):
+        return SavedGame.objects.create(owner=owner or self.user, name=name,
+            airport='egll', snapshot=fixture(), **kwargs)
+
+    def test_guests_do_not_see_or_query_recent_saves(self):
+        from unittest.mock import patch
+        self.save('Private checkpoint')
+        with patch('simulator.views.SavedGame.objects.filter') as query:
+            response = self.client.get(reverse('welcome'))
+        query.assert_not_called()
+        self.assertNotContains(response, 'Your recent saves')
+        self.assertNotContains(response, 'Private checkpoint')
+        self.assertContains(response, 'Start game')
+
+    def test_signed_in_empty_state_and_new_game(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, 'No saved games yet')
+        self.assertContains(response, 'href="/play/">New game')
+        response = self.client.get(reverse('index'))
+        self.assertNotContains(response, 'data-load-url=')
+        self.assertEqual(response.status_code, 200)
+
+    def test_latest_three_owner_saves_include_autosave_and_continue(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        old = self.save('Older checkpoint')
+        first = self.save('Manual checkpoint')
+        auto = self.save('Autosave', is_autosave=True)
+        latest = self.save('Latest checkpoint')
+        SavedGame.objects.filter(pk=old.pk).update(saved_at=timezone.now() - timedelta(days=2))
+        self.save('Other account secret', owner=self.other)
+        self.client.force_login(self.user)
+        response = self.client.get(reverse('welcome'))
+        recent = response.context['recent_saves']
+        self.assertEqual([s.pk for s in recent], [latest.pk, auto.pk, first.pk])
+        self.assertNotContains(response, 'Older checkpoint')
+        self.assertNotContains(response, 'Other account secret')
+        self.assertContains(response, 'London Heathrow (EGLL)', count=4)
+        self.assertContains(response, latest.saved_at.strftime('%d %b %Y, %H:%M'))
+        self.assertContains(response, f'/play/?map=egll&amp;save={latest.pk}')
+        self.assertContains(response, 'View all saves')
+        self.assertTrue(all('snapshot' in s.get_deferred_fields() for s in recent))
+        loaded = self.client.get(reverse('index'), {'map': 'egll', 'save': latest.pk})
+        self.assertContains(loaded, f'data-load-url="/saves/{latest.pk}/snapshot/"')
+
+    def test_snapshot_column_is_not_selected_or_lazily_loaded(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        self.save('Metadata only'); self.client.force_login(self.user)
+        with CaptureQueriesContext(connection) as queries:
+            response = self.client.get(reverse('welcome'))
+        self.assertEqual(response.status_code, 200)
+        save_queries = [q['sql'] for q in queries if 'simulator_savedgame' in q['sql']]
+        self.assertEqual(len(save_queries), 1)
+        self.assertNotIn('"snapshot"', save_queries[0])
+        self.assertIn('LIMIT 3', save_queries[0])
+
+    def test_names_are_escaped(self):
+        self.save('<script>bad</script>'); self.client.force_login(self.user)
+        response = self.client.get(reverse('welcome'))
+        self.assertContains(response, '&lt;script&gt;bad&lt;/script&gt;')
+        self.assertNotContains(response, '<script>bad</script>')
+
+    def test_save_loading_error_keeps_welcome_and_new_game_available(self):
+        from unittest.mock import patch
+        from django.db import DatabaseError
+        self.client.force_login(self.user)
+        with patch('simulator.views.SavedGame.objects.filter', side_effect=DatabaseError):
+            response = self.client.get(reverse('welcome'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Recent saves could not be loaded')
+        self.assertContains(response, 'Start game')
+        self.assertNotContains(response, 'No saved games yet')

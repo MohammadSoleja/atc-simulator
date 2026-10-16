@@ -418,3 +418,11 @@ No cumulative account statistics are implemented by these tickets.
 
 See [save-format.md](docs/save-format.md) for the versioned format, validation,
 limits, ownership rules and playtest steps.
+
+### Welcome shortcuts (W05)
+
+Signed-in players see their three most recent checkpoints on the welcome page,
+including autosave, with airport, UTC saved date and Continue links. New game
+starts a fresh session; View all saves opens the complete management list. New
+accounts see an empty state. Guests do not query or display account saves.
+The recent list fetches metadata only and remains limited to three rows.
