@@ -70,7 +70,7 @@ def load_game(request, pk):
 @require_GET
 def saved_games(request):
     try:
-        saves = list(SavedGame.objects.filter(owner=request.user))
+        saves = list(SavedGame.objects.only('name', 'airport', 'is_autosave', 'saved_at').filter(owner=request.user))
     except DatabaseError:
         return render(request, 'simulator/saved_games.html', {'load_error': True}, status=503)
     return render(request, 'simulator/saved_games.html', {'saves': saves})
