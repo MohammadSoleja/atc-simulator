@@ -351,9 +351,8 @@ Email verification is not implemented. Password reset is available via A04.
 Email addresses are not unique identifiers in this initial Django user model.
 
 Logout uses a CSRF-protected POST form. Guests can still open `/play/` without
-an account. Accounts do not yet save games or statistics. The private local
-signing key persists across server restarts; do not commit it. Set a private
-`DJANGO_SECRET_KEY` when deploying. Production cookies require HTTPS when debug
+an account. The private local signing key persists across server restarts; do not commit it. 
+Set a private `DJANGO_SECRET_KEY` when deploying. Production cookies require HTTPS when debug
 is disabled. Public deployment also needs login abuse/rate-limit controls.
 
 Playtest: create an account, try duplicate/invalid registration, log out, try
