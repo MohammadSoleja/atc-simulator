@@ -1,9 +1,14 @@
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
-from . import views
+from . import save_views, views
 
 urlpatterns = [
+    path('saves/', save_views.saved_games, name='saved_games'),
+    path('saves/create/', save_views.save_game, name='save_game'),
+    path('saves/<int:pk>/snapshot/', save_views.load_game, name='load_game'),
+    path('saves/<int:pk>/rename/', save_views.rename_save, name='rename_save'),
+    path('saves/<int:pk>/delete/', save_views.delete_save, name='delete_save'),
     path('accounts/profile/', views.profile, name='profile'),
     path('accounts/profile/saved/', views.profile_saved, name='profile_saved'),
     path('accounts/password-reset/', auth_views.PasswordResetView.as_view(

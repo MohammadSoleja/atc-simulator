@@ -93,8 +93,11 @@
   function profile(a){return performanceProfiles[a.type];}
 
   let state;
+  let sessionId;
   function reset() {
     window.ATCReadbacks?.clear();
+    sessionId=window.crypto.randomUUID();
+    window.ATCSaves?.newGame();
     state = { aircraft:[], upcoming:[], selected:null, paused:false, elapsed:0, clockElapsed:0, trafficElapsed:0, lastSpawn:0, nextId:1,
       landings:0, handoffs:0, violations:0, missed:0, score:0, conflicts:new Set() };
     setSimulationRate(NORMAL_SIMULATION_RATE);
@@ -639,6 +642,29 @@
   document.getElementById('restartBtn').onclick=()=>{reset();renderStrips()};
   document.getElementById('spawnBtn').onclick=()=>{Math.random()<.7?spawnArrival():spawnDeparture();renderStrips()};
 
+  function exportSnapshot(){
+    const copy=JSON.parse(JSON.stringify(state));
+    delete copy.selected;delete copy.paused;
+    const ids=new Set(copy.aircraft.map(a=>a.id));
+    copy.conflicts=[...state.conflicts].filter(pair=>pair.split('-').every(id=>ids.has(Number(id))));
+    for(const a of copy.aircraft)a.nav=a.nav?.id||null;
+    return {version:1,airport:'egll',session_id:sessionId,pace:simulationRate,state:copy};
+  }
+  function restoreSnapshot(snapshot){
+    // Validate and construct first. A rejected save must not mutate the running game.
+    window.ATCSaveFormat.validate(snapshot,{types:aircraftTypes,fixes:fixes.map(f=>f.id),runways:runways.map(r=>r.id)});
+    const restored=JSON.parse(JSON.stringify(snapshot.state));
+    for(const a of restored.aircraft)a.nav=a.nav?findFix(a.nav):null;
+    restored.conflicts=new Set(restored.conflicts);restored.selected=null;restored.paused=true;
+    window.ATCReadbacks?.clear();state=restored;sessionId=snapshot.session_id;
+    setSimulationRate(snapshot.pace);input.value='';
+    document.getElementById('pauseBtn').textContent='Resume';
+    renderStrips();updateUI();say('Saved game loaded. Review the traffic, then Resume.');
+  }
+  window.ATCGame={exportSnapshot,restoreSnapshot,isPaused:()=>state.paused,
+    setPaused(value){state.paused=value;document.getElementById('pauseBtn').textContent=value?'Resume':'Pause';},
+    notify:say};
+
   let last=performance.now(),stripTimer=0;
   // One real-time step shared by the animation loop and isolated timing tests.
   function advanceSimulation(dt){
@@ -650,6 +676,7 @@
   function frame(now){
     const dt=Math.min(.1,(now-last)/1000);last=now;
     advanceSimulation(dt);
+    window.ATCSaves?.tick(dt,state.paused);
     draw();updateUI();stripTimer+=dt;if(stripTimer>.7){renderStrips();stripTimer=0}requestAnimationFrame(frame);
   }
   reset();resize();renderStrips();requestAnimationFrame(frame);

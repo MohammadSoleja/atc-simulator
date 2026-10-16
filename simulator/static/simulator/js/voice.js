@@ -247,7 +247,7 @@
   if(!Recognition){button.disabled=true;status.textContent='Voice unavailable in this browser. Try Chrome or Edge; typed commands still work.';return;}
   let recognition=null,transcript='',alternatives=[],previous='',busy=false,blocked=false,cancelled=false,failed=false,greetingPending=false;
   function start(){
-    if(busy||['helpDialog','infoDialog','settingsDialog'].some(id=>document.getElementById(id).open))return;
+    if(busy||['helpDialog','infoDialog','settingsDialog','saveDialog'].some(id=>document.getElementById(id)?.open))return;
     greetingPending=false;previous=input.value;transcript='';alternatives=[];busy=true;blocked=true;cancelled=false;failed=false;
     feedback();
     window.ATCReadbacks?.setListening(true);

@@ -170,3 +170,6 @@ html[data-theme="dark"], html[data-theme="dark"] body { background:#17252f; }
 .airline-table th { position:sticky; top:0; background:var(--panel); }
 .airline-table td:first-child { font-weight:bold; white-space:nowrap; }
 .airline-table td:last-child { overflow-wrap:anywhere; }
+#saveForm { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+#saveName { min-width:0; max-width:100%; padding:8px; font:inherit; }
+#saveFeedback { color:var(--green); }

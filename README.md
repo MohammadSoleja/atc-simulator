@@ -351,9 +351,8 @@ Email verification is not implemented. Password reset is available via A04.
 Email addresses are not unique identifiers in this initial Django user model.
 
 Logout uses a CSRF-protected POST form. Guests can still open `/play/` without
-an account. Accounts do not yet save games or statistics. The private local
-signing key persists across server restarts; do not commit it. Set a private
-`DJANGO_SECRET_KEY` when deploying. Production cookies require HTTPS when debug
+an account. The private local signing key persists across server restarts; do not commit it. 
+Set a private `DJANGO_SECRET_KEY` when deploying. Production cookies require HTTPS when debug
 is disabled. Public deployment also needs login abuse/rate-limit controls.
 
 Playtest: create an account, try duplicate/invalid registration, log out, try
@@ -402,3 +401,20 @@ credentials): `DJANGO_EMAIL_BACKEND` (SMTP backend by default when debug is off)
 before deploying; console output is only for local testing. Public hosting also
 needs abuse controls for login and reset requests. Password reset does not
 sign the player in automatically.
+
+### Saved games (S01–S06)
+
+Run `python manage.py migrate` after updating. Signed-in players have **Save game**
+in the simulator and **Saved games** in the welcome dropdown and simulator
+Settings. Manual saves are named checkpoints; Continue loads them paused.
+The saved-games page supports rename and confirmed deletion. Guests can still
+play without signing in.
+
+Autosave updates one separate account-owned slot after each 60 seconds of active
+play, regardless of pace. Check Settings for status. Manual saves are preserved;
+use Save game before leaving because closing a tab does not guarantee a save.
+Loading failures stay paused and cannot overwrite the autosave until Restart.
+No cumulative account statistics are implemented by these tickets.
+
+See [save-format.md](docs/save-format.md) for the versioned format, validation,
+limits, ownership rules and playtest steps.

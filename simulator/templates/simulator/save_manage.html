@@ -1,0 +1,9 @@
+{% extends 'simulator/account_base.html' %}
+{% block title %}{% if deleting %}Delete save{% else %}Rename save{% endif %}{% endblock %}
+{% block content %}
+<h1 id="account-title">{% if deleting %}Delete save?{% else %}Rename save{% endif %}</h1>
+{% if deleting %}<p>Delete “{{ save.name }}”? This cannot be undone.</p>{% endif %}
+<form method="post">{% csrf_token %}{% if not deleting %}{% include 'simulator/account_fields.html' %}{% endif %}
+<button class="start-button" type="submit">{% if deleting %}Delete save{% else %}Save name{% endif %}</button></form>
+<p><a href="{% url 'saved_games' %}">Cancel</a></p>
+{% endblock %}
