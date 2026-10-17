@@ -11,10 +11,11 @@
     const s = save.state;
     if (!object(s)) fail('Missing simulation state.');
     const stateKeys = ['elapsed','clockElapsed','trafficElapsed','lastSpawn','nextId','landings','handoffs','violations','missed','score','aircraft','upcoming','conflicts'];
-    if (Object.keys(s).length !== stateKeys.length || stateKeys.some(key => !(key in s))) fail('Incomplete simulation state.');
+    if (Object.keys(s).some(key=>!stateKeys.includes(key)&&key!=='trafficSchedule') || stateKeys.some(key => !(key in s))) fail('Incomplete simulation state.');
     for (const key of stateKeys.slice(0,9)) if (!number(s[key]) || (['nextId','landings','handoffs','violations','missed'].includes(key) && !Number.isInteger(s[key]))) fail(`Invalid ${key}.`);
     if (s.nextId < 1 || !Number.isInteger(s.score) || !number(s.score,-1e9) || s.lastSpawn > s.trafficElapsed) fail('Invalid game counters.');
-    if (!Array.isArray(s.aircraft) || s.aircraft.length > 100 || !Array.isArray(s.upcoming) || s.upcoming.length > 6 || !Array.isArray(s.conflicts)) fail('Invalid traffic lists.');
+    if (!Array.isArray(s.aircraft) || s.aircraft.length > 100 || !Array.isArray(s.upcoming) || s.upcoming.length > 10 || !Array.isArray(s.conflicts)) fail('Invalid traffic lists.');
+    if('trafficSchedule' in s&&(!object(s.trafficSchedule)||Object.keys(s.trafficSchedule).length!==2||!number(s.trafficSchedule.arrival)||!number(s.trafficSchedule.departure)))fail('Invalid traffic schedule.');
     const ids = new Set(), callsigns = new Set();
     const identity = a => {
       if (!object(a) || !/^[A-Z]{3}[0-9]{1,7}$/.test(a.callsign) || callsigns.has(a.callsign) || !context.types.includes(a.type) || !['arrival','departure'].includes(a.kind)) fail('Invalid aircraft identity.');

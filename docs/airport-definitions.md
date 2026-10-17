@@ -26,6 +26,10 @@ No external map API, new frontend framework or database table is introduced.
   altitude/speed ranges and full-day density/arrival-share intervals. Intervals
   end exclusively at `until_minute`, increasing through minute 1440. Arrival
   altitude ranges retain the existing engine's hundreds-of-feet unit.
+  Optional `arrival_interval_seconds` enables an independent arrival stream;
+  departures retain their time-of-day rate. Heathrow uses 20 seconds after buildup.
+  Stream reservations are stored in optional version-1 `trafficSchedule` fields;
+  older saves initialise these from their existing pending flights.
 - `background`: bundled asset path, attribution and dataset/licence links.
 - `aeronautical_sources`: references for independently transcribed facts.
 

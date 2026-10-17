@@ -1,5 +1,12 @@
 const assert=require('node:assert/strict');
-const {createEngine}=require('./harness.cjs');
+const {createEngine:makeEngine}=require('./harness.cjs');
+// Keep coverage for airports using the original mixed scheduler. Heathrow's
+// independent arrival stream is tested separately in arrival-traffic.cjs.
+function createEngine(){
+ const definition=JSON.parse(require('node:fs').readFileSync('simulator/airports/egll.json','utf8'));
+ delete definition.traffic.arrival_interval_seconds;
+ return makeEngine(undefined,definition);
+}
 
 const minute=(hour,min=0)=>hour*3600+min*60;
 function atTime(engine,seconds){engine.getState().clockElapsed=(seconds-minute(6)+86400)%86400;}

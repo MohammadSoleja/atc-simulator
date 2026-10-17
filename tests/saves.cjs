@@ -46,8 +46,10 @@ engine.update(0,0);const landed=clone(game.exportSnapshot());
 assert.equal(landed.state.landings,1);assert.equal(landed.state.aircraft[0].phase,'landed');
 game.restoreSnapshot(landed);game.setPaused(false);engine.advanceSimulation(3);
 assert.equal(engine.getState().landings,1);assert.equal(engine.getState().aircraft.some(a=>a.id===arrival.id),false);
-// Export one real-engine fixture for server compatibility tests.
-assert.deepEqual(before,JSON.parse(fs.readFileSync('tests/fixtures/save-v1.json','utf8')),'browser snapshot matches the server compatibility fixture');
+// The pre-independent-scheduler fixture must still load without mutation.
+const legacy=JSON.parse(fs.readFileSync('tests/fixtures/save-v1.json','utf8'));
+game.restoreSnapshot(legacy);
+assert.deepEqual(clone(game.exportSnapshot()),legacy,'legacy server/browser fixture remains compatible');
 console.log('PASS: snapshot round trip, pending flights, navigation/runways, paused load, atomic rejection, conflict and landing deduplication.');
 
 // A staggered wave retains identities and due times across save/restore.

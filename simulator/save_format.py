@@ -67,7 +67,11 @@ def validate_snapshot(snapshot):
     if type(snapshot['pace']) is not int or snapshot['pace'] not in {1, 2, 4, 8}:
         fail('Invalid simulation pace.')
     state = snapshot['state']
-    fields(state, TIMERS | COUNTERS | {'score', 'aircraft', 'upcoming', 'conflicts'})
+    fields(state, TIMERS | COUNTERS | {'score', 'aircraft', 'upcoming', 'conflicts'}, {'trafficSchedule'})
+    if 'trafficSchedule' in state:
+        fields(state['trafficSchedule'], {'arrival', 'departure'})
+        for value in state['trafficSchedule'].values():
+            number(value, 'traffic schedule')
     for key in TIMERS:
         number(state[key], key)
     for key in COUNTERS:
@@ -124,8 +128,8 @@ def validate_snapshot(snapshot):
             number(point['x'], 'trail x', low=-2, high=3)
             number(point['y'], 'trail y', low=-2, high=3)
             number(point['t'], 'trail timestamp', high=state['elapsed'])
-    if not isinstance(state['upcoming'], list) or len(state['upcoming']) > 6:
-        fail('A save may contain at most six pending flights.')
+    if not isinstance(state['upcoming'], list) or len(state['upcoming']) > 10:
+        fail('A save may contain at most ten pending flights.')
     for flight in state['upcoming']:
         fields(flight, {'callsign', 'kind', 'type', 'dueAt'}, {'exitFix', 'altitude', 'targetAltitude', 'speed'})
         identity(flight)

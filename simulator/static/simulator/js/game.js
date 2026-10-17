@@ -307,12 +307,38 @@
     else {flight.altitude=Math.round(rand(...traffic.arrival_altitude_hundreds))*100;flight.targetAltitude=flight.altitude;flight.speed=Math.round(rand(...traffic.arrival_speed));}
     state.upcoming.push(flight);
   }
+  function updateIndependentTraffic(){
+    const now=state.trafficElapsed,horizon=now+TRAFFIC_NOTICE_SECONDS;
+    // Store the last reserved activation for each stream. Older saves initialise
+    // from pending notices, so loading never introduces a backlog of aircraft.
+    if(!state.trafficSchedule){
+      state.trafficSchedule={};
+      for(const kind of ['arrival','departure'])state.trafficSchedule[kind]=Math.max(state.lastSpawn,...state.upcoming.filter(f=>f.kind===kind).map(f=>f.dueAt));
+    }
+    const pattern=trafficPattern((timeOfDaySeconds()+TRAFFIC_NOTICE_SECONDS*NORMAL_SIMULATION_RATE)%86400);
+    const buildup=Math.max(0,1-now/traffic.buildup_seconds);
+    for(const kind of ['arrival','departure']){
+      const enabled=pattern.density>0&&(kind==='arrival'?pattern.arrivalShare>0:pattern.arrivalShare<1);
+      if(!enabled){state.trafficSchedule[kind]=horizon;continue;}
+      const interval=kind==='arrival'
+        ?(traffic.arrival_interval_seconds+(60-traffic.arrival_interval_seconds)*buildup)/Math.min(1,pattern.density)
+        :TRAFFIC_INTERVAL*(1+buildup)/(pattern.density*(1-pattern.arrivalShare));
+      const reserved=Math.max(state.trafficSchedule[kind],...state.upcoming.filter(f=>f.kind===kind).map(f=>f.dueAt));
+      // Never compress the promised 30-second notice after changing a setting.
+      if(horizon+1e-7>=reserved+interval){
+        const due=Math.max(horizon,reserved+interval);
+        queueFlight(kind,due);state.trafficSchedule[kind]=due;
+      }
+    }
+    state.upcoming.sort((a,b)=>a.dueAt-b.dueAt);
+  }
   function updateTraffic(previousTrafficTime=state.trafficElapsed){
-    const pending=state.upcoming[0];
-    if(pending && state.trafficElapsed>=pending.dueAt){
+    let pending=state.upcoming[0];
+    while(pending && state.trafficElapsed+1e-7>=pending.dueAt){
       const {dueAt,...flight}=pending;
       flight.kind==='arrival'?spawnArrival(flight):spawnDeparture(flight);
       state.upcoming.shift();state.lastSpawn=state.trafficElapsed;
+      pending=state.upcoming[0];
     }
     if(traffic.waves){
       const index=Math.max(0,Math.floor((state.trafficElapsed-traffic.buildup_seconds)/traffic.waves.interval_seconds)-1);
@@ -333,6 +359,7 @@
         }
       }
     }
+    if(traffic.arrival_interval_seconds){updateIndependentTraffic();return;}
     if(state.upcoming.length)return;
     // Choose the next flight once and reserve its identity for the preview strip.
     const futureTime=(timeOfDaySeconds()+TRAFFIC_NOTICE_SECONDS*NORMAL_SIMULATION_RATE*CLOCK_SECONDS_PER_SIM_SECOND)%86400;

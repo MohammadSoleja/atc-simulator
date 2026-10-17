@@ -86,3 +86,18 @@ class AirportConfigurationTests(SimpleTestCase):
             for identifier in ['missing', 'other']:
                 with self.assertRaises(ImproperlyConfigured):
                     get_airport(identifier)
+
+    def test_independent_traffic_schedule_save_compatibility(self):
+        snapshot = json.loads((Path(settings.BASE_DIR) / 'tests/fixtures/save-v1.json').read_text())
+        # Existing version-1 saves remain valid; new saves add the stream reservations.
+        validate_snapshot(snapshot)
+        snapshot['state']['trafficSchedule'] = {'arrival': 60, 'departure': 120}
+        pending = snapshot['state']['upcoming']
+        for index in range(1, 8):
+            flight = copy.deepcopy(pending[0])
+            flight.update(callsign=f'BAW{1000 + index}', dueAt=60 + index * 15)
+            pending.append(flight)
+        validate_snapshot(snapshot)
+        snapshot['state']['trafficSchedule']['arrival'] = -1
+        with self.assertRaises(ValidationError):
+            validate_snapshot(snapshot)

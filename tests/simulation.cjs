@@ -160,8 +160,8 @@ console.log('PASS: full notice, pause, activation deadline, preserved flight ide
 
 for(const [kind,random] of [['arrival',0.1],['departure',0.9]]){
  vm.runInContext(`Math.random=()=>${random}`,context);
- engine.reset();engine.getState().trafficElapsed=31;engine.update(0);
- const scheduled=engine.getState().upcoming[0];assert.equal(scheduled.kind,kind);
+ engine.reset();engine.getState().trafficElapsed=300;engine.update(0);
+ const scheduled=engine.getState().upcoming.find(f=>f.kind===kind);assert.ok(scheduled,'independent stream reserves '+kind);
  assert.notEqual(scheduled.callsign,engine.getState().aircraft[0].callsign,'preview callsigns are unique');
  engine.getState().trafficElapsed=scheduled.dueAt;engine.update(0);
  const flight=engine.getState().aircraft.find(a=>a.callsign===scheduled.callsign);

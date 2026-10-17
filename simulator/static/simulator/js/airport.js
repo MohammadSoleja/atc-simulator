@@ -43,6 +43,7 @@
       if(!fixes.length||!data.departure_fixes.length||new Set(data.departure_fixes).size!==data.departure_fixes.length||data.departure_fixes.some(id=>!fixIds.has(id)))fail('departure fixes');
       for(const [key,min,max] of [['start_seconds',0,86399],['interval_seconds',1,3600],['notice_seconds',1,3600],['buildup_seconds',1,3600],['initial_arrivals',0,100]])if(!Number.isInteger(t[key])||!finite(t[key],min,max))fail('traffic '+key);
       for(const [key,min,max] of [['arrival_altitude_hundreds',1,999],['arrival_speed',140,350]])if(t[key].length!==2||t[key].some(n=>!finite(n,min,max))||t[key][0]>t[key][1])fail('traffic '+key);
+      if(t.arrival_interval_seconds!==undefined&&(!Number.isInteger(t.arrival_interval_seconds)||!finite(t.arrival_interval_seconds,15,3600)))fail('arrival interval');
       if(t.waves){
         for(const [key,min,max] of [['spacing_seconds',1,30],['interval_seconds',300,600],['jitter_seconds',0,150]])if(!Number.isInteger(t.waves[key])||!finite(t.waves[key],min,max))fail('wave '+key);
         if(t.waves.jitter_seconds>=t.waves.interval_seconds)fail('wave timing');

@@ -68,6 +68,8 @@ def validate_airport(data):
         require(isinstance(data['departure_fixes'], list) and bool(data['departure_fixes']) and len(set(data['departure_fixes'])) == len(data['departure_fixes']) and set(data['departure_fixes']) <= fixes, 'departure fixes')
         for key, low, high in [('start_seconds',0,86399),('interval_seconds',1,3600),('notice_seconds',1,3600),('buildup_seconds',1,3600),('initial_arrivals',0,100)]:
             require(type(traffic[key]) is int and low <= traffic[key] <= high, key)
+        if 'arrival_interval_seconds' in traffic:
+            require(type(traffic['arrival_interval_seconds']) is int and 15 <= traffic['arrival_interval_seconds'] <= 3600, 'arrival interval')
         if 'waves' in traffic:
             waves = traffic['waves']
             for key, low, high in [('spacing_seconds',1,30),('interval_seconds',300,600),('jitter_seconds',0,150)]:

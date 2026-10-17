@@ -253,10 +253,11 @@
     ],
     "description": "Arrival-heavy early mornings, mixed daytime traffic, with a five-minute buildup and occasional staggered waves. Traffic is uncapped.",
     "waves": {
-      "spacing_seconds": 15,
+      "spacing_seconds": 20,
       "interval_seconds": 450,
       "jitter_seconds": 150
-    }
+    },
+    "arrival_interval_seconds": 20
   },
   "background": {
     "asset": "simulator/js/map-data.js",

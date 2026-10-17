@@ -213,9 +213,12 @@ step or expose test controls in the game.
 Normal aircraft dynamics now run 20% faster, uniformly scaling movement, turns,
 altitude and speed changes; indicated speeds and aircraft envelopes are unchanged.
 The airport clock advances two minutes per real minute at Normal. Automatic traffic has a 30-second
-base interval and a five-minute buildup. Traffic is uncapped. After buildup,
+base interval for the mixed scheduler. Heathrow uses independent streams:
+arrivals build down from roughly 60 to 20 Normal real seconds during the first
+five minutes, while departures retain their time-of-day cadence (roughly 60
+seconds during daytime mixed traffic). Traffic is uncapped. After buildup,
 small mixed waves occur roughly every 5–10 Normal playing minutes: 2–3 arrivals
-and 1–2 departures, staggered 15 seconds apart. Only flights within 30 seconds
+and 1–2 departures, staggered 20 seconds apart. Only flights within 30 seconds
 of activation appear in preview strips. Waves pause and scale with game speed,
 survive save/resume, and respect closed/arrival-only hours.
 A narrow separation exception applies only to an established final within 3 NM,
@@ -445,3 +448,6 @@ validation. The next airport is **Riyadh (RUH/OERK)**, approved for both runway
 pairs/directions and a 100 × 100 NM sector. Its scoped sources and implementation
 notes are in [riyadh-scope.md](docs/riyadh-scope.md). Riyadh becomes playable in
 M04–M06; it is not yet offered in the map selector.
+
+Run `node tests/arrival-traffic.cjs` for independent-stream timing, overlapping
+30-second notices, wave spacing, pause, game speeds and save/resume coverage.
