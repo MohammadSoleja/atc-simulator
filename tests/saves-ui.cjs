@@ -7,7 +7,7 @@ function setup(loadUrl=''){
   addEventListener(type,fn){this.handlers[type]=fn;},showModal(){this.open=true;},close(){this.open=false;this.handlers.close?.();},focus(){}});return nodes.get(id);};
  node('saveConfig').dataset={createUrl:'/saves/create/',loadUrl};
  let paused=false,fetchResult={ok:true,json:async()=>({name:'Test save',saved_at:'2026-10-12T12:00:00Z',snapshot:fixture})};
- const game={isPaused:()=>paused,setPaused(value){paused=value;},exportSnapshot:()=>fixture,
+ const game={airportName:'Heathrow',isPaused:()=>paused,setPaused(value){paused=value;},exportSnapshot:()=>fixture,
   restoreSnapshot(value){assert.deepEqual(value,fixture);paused=true;},notify(...args){notifications.push(args);}};
  const context=vm.createContext({window:{ATCGame:game},document:{getElementById:node,querySelector:()=>({value:'csrf-token'})},
   AbortController,setTimeout:()=>1,clearTimeout(){},fetch:async(url,options)=>{requests.push({url,options});if(fetchResult instanceof Error)throw fetchResult;return fetchResult;}});

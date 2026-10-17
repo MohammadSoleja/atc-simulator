@@ -41,15 +41,15 @@
     </section>
     <section class="airport-card" aria-labelledby="airport-title">
       <div class="airport-details">
-        <p class="eyebrow">EGLL · United Kingdom</p>
-        <h2 id="airport-title">London Heathrow</h2>
+        <p class="eyebrow">{{ default_map.code }}</p>
+        <h2 id="airport-title">{{ default_map.name }}</h2>
         <p>Two parallel runways. A busy London approach. Start with a manageable flow of aircraft and build your rhythm as traffic arrives.</p>
         <form action="{% url 'index' %}" method="get" class="map-selection">
           <label for="mapSelect">Choose your map</label>
           <select id="mapSelect" name="map">
             {% for map in maps %}<option value="{{ map.id }}">{{ map.name }} ({{ map.code }})</option>{% endfor %}
           </select>
-          <p class="map-note">Heathrow is the first playable map. More airports will follow.</p>
+          <p class="map-note">{{ maps|length }} playable map{{ maps|length|pluralize }}. More airports will follow.</p>
           <button class="start-button" type="submit">Start game <span aria-hidden="true">→</span></button>
         </form>
         <p class="session-note">Starts a new session. No account required.</p>
@@ -82,7 +82,7 @@
           <li>
             <div class="recent-save-details">
               <h3>{{ save.name }}</h3>
-              <p>{% if save.airport == 'egll' %}London Heathrow (EGLL){% else %}{{ save.airport }}{% endif %}
+              <p>{{ save.airport_label }}
                 · <time datetime="{{ save.saved_at|utc|date:'c' }}">{{ save.saved_at|utc|date:'d M Y, H:i' }} UTC</time></p>
             </div>
             <a class="continue-save" href="{% url 'index' %}?map={{ save.airport|urlencode }}&amp;save={{ save.pk }}" aria-label="Continue {{ save.name }}">Continue</a>

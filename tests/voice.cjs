@@ -4,9 +4,10 @@ function element(id){return elements[id]??=( {value:'',textContent:'',open:false
 class Recognition {constructor(){instances.push(this);}start(){}stop(){this.stopped=true;}abort(){this.onend();}}
 const context={window:{SpeechRecognition:Recognition,addEventListener(){}},document:{getElementById:element,addEventListener(type,fn){listeners[type]=fn;}}};
 vm.createContext(context);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/airlines.js','utf8'),context);vm.runInContext(fs.readFileSync('simulator/static/simulator/js/voice.js','utf8'),context);
-const vocabulary={callsigns:['SVA111','BAW123','AAL798','KLM713','VIR636','VIR153','UAE501','AIC786'],fixes:['WOD','CPT','NIGIT','HEN','DONNA'],runways:['27L','27R','09L','09R']};
+const vocabulary={callsigns:['SVA111','BAW123','AAL798','KLM713','VIR636','VIR153','UAE501','AIC786'],fixes:['WOD','CPT','NIGIT','HEN','DONNA','LAM'],runways:['27L','27R','09L','09R']};
 context.window.getVoiceContext=()=>vocabulary;
 const translate=text=>context.window.ATCVoice.translate(text,vocabulary);
+for(const name of ['Lima Alpha Mic','Lima Alpha Mike','Lima Alpha Mick'])assert.equal(translate('Virgin 636 heading '+name),'VIR636 C LAM');
 // Reported playtest transcripts and adjacent forms, grouped for new reports.
 const transcriptCases=require('./voice-transcripts.json');
 for(const {group,spoken,expected} of transcriptCases){

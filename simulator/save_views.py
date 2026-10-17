@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
+from .airports import label_saves
 from .forms import SaveNameForm
 from .models import SavedGame
 from .save_format import validate_snapshot
@@ -70,7 +71,7 @@ def load_game(request, pk):
 @require_GET
 def saved_games(request):
     try:
-        saves = list(SavedGame.objects.only('name', 'airport', 'is_autosave', 'saved_at').filter(owner=request.user))
+        saves = label_saves(list(SavedGame.objects.only('name', 'airport', 'is_autosave', 'saved_at').filter(owner=request.user)))
     except DatabaseError:
         return render(request, 'simulator/saved_games.html', {'load_error': True}, status=503)
     return render(request, 'simulator/saved_games.html', {'saves': saves})

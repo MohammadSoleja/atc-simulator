@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "id": "egll",
+  "code": "EGLL",
+  "name": "London Heathrow",
+  "short_name": "Heathrow",
+  "sector": {
+    "width": 100,
+    "height": 70,
+    "latitude": 51.4775,
+    "longitude": -0.4614
+  },
+  "display": {
+    "width": 1000,
+    "height": 700,
+    "zoom": 1.4,
+    "approach_range_nm": 25
+  },
+  "wind": {
+    "heading": 270,
+    "speed": 10
+  },
+  "runways": [
+    {
+      "ends": [
+        "09L",
+        "27R"
+      ],
+      "headings": [
+        90,
+        270
+      ],
+      "start": [
+        "512839.00N",
+        "0002905.97W"
+      ],
+      "end": [
+        "512839.63N",
+        "0002559.82W"
+      ]
+    },
+    {
+      "ends": [
+        "09R",
+        "27L"
+      ],
+      "headings": [
+        90,
+        270
+      ],
+      "start": [
+        "512753.25N",
+        "0002856.33W"
+      ],
+      "end": [
+        "512753.82N",
+        "0002602.76W"
+      ]
+    }
+  ],
+  "fixes": [
+    {
+      "id": "BPK",
+      "latitude": "514459.05N",
+      "longitude": "0000624.25W",
+      "kind": "DME",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "LAM",
+      "latitude": "513845.69N",
+      "longitude": "0000906.13E",
+      "kind": "DME",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "OCK",
+      "latitude": "511818.17N",
+      "longitude": "0002649.86W",
+      "kind": "DME",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "BIG",
+      "latitude": "511951.15N",
+      "longitude": "0000205.32E",
+      "kind": "DME",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "BNN",
+      "latitude": "514334.19N",
+      "longitude": "0003259.10W",
+      "kind": "DME",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "CPT",
+      "latitude": "512929.66N",
+      "longitude": "0011310.89W",
+      "kind": "VOR/DME",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "HEN",
+      "latitude": "514535.07N",
+      "longitude": "0004725.05W",
+      "kind": "NDB",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "WOD",
+      "latitude": "512710.02N",
+      "longitude": "0005243.68W",
+      "kind": "NDB",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "LON",
+      "latitude": "512914.09N",
+      "longitude": "0002759.54W",
+      "kind": "DME",
+      "label_offset": [
+        -30,
+        -22
+      ]
+    },
+    {
+      "id": "DONNA",
+      "latitude": "514200.38N",
+      "longitude": "0004437.04W",
+      "kind": "RNAV",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "DORKI",
+      "latitude": "511633N",
+      "longitude": "0001552W",
+      "kind": "RNAV",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "HILLY",
+      "latitude": "512006.04N",
+      "longitude": "0001437.38E",
+      "kind": "RNAV",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "NIGIT",
+      "latitude": "511846.96N",
+      "longitude": "0011014.71W",
+      "kind": "RNAV",
+      "label_offset": [
+        0,
+        12
+      ]
+    }
+  ],
+  "departure_fixes": [
+    "BPK",
+    "LAM",
+    "OCK",
+    "BIG",
+    "BNN",
+    "CPT",
+    "HEN",
+    "WOD",
+    "DONNA",
+    "DORKI",
+    "HILLY",
+    "NIGIT"
+  ],
+  "traffic": {
+    "start_seconds": 21600,
+    "interval_seconds": 30,
+    "notice_seconds": 30,
+    "buildup_seconds": 300,
+    "initial_arrivals": 1,
+    "arrival_altitude_hundreds": [
+      65,
+      100
+    ],
+    "arrival_speed": [
+      220,
+      270
+    ],
+    "arrival_target_speed": 220,
+    "patterns": [
+      {
+        "until_minute": 305,
+        "density": 0,
+        "arrival_share": 0
+      },
+      {
+        "until_minute": 360,
+        "density": 0.6,
+        "arrival_share": 1
+      },
+      {
+        "until_minute": 420,
+        "density": 1,
+        "arrival_share": 0.75
+      },
+      {
+        "until_minute": 1360,
+        "density": 1,
+        "arrival_share": 0.5
+      },
+      {
+        "until_minute": 1375,
+        "density": 0.4,
+        "arrival_share": 1
+      },
+      {
+        "until_minute": 1440,
+        "density": 0,
+        "arrival_share": 0
+      }
+    ],
+    "description": "Arrival-heavy early mornings, mixed daytime traffic, with a five-minute buildup and occasional staggered waves. Traffic is uncapped.",
+    "waves": {
+      "spacing_seconds": 15,
+      "interval_seconds": 450,
+      "jitter_seconds": 150
+    }
+  },
+  "background": {
+    "asset": "simulator/js/map-data.js",
+    "attribution": "Map: OS Open Rivers (Contains OS data \u00a9 Crown copyright and database right 2026), Natural Earth urban areas. Navigation aids and runways: UK AIP. Map is simplified for gameplay.",
+    "sources": [
+      {
+        "name": "OS Open Rivers, April 2026",
+        "url": "https://www.ordnancesurvey.co.uk/products/os-open-rivers",
+        "licence": "Open Government Licence v3",
+        "licence_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+      },
+      {
+        "name": "Natural Earth urban areas",
+        "url": "https://www.naturalearthdata.com/",
+        "licence": "Public domain",
+        "licence_url": "https://www.naturalearthdata.com/about/terms-of-use/"
+      }
+    ]
+  },
+  "aeronautical_sources": [
+    {
+      "name": "UK AIP EGLL AD 2.12 and ENR 4.1/4.4, 2026-10-01",
+      "url": "https://www.aurora.nats.co.uk/htmlAIP/Publications/2026-10-01-AIRAC/html/index-en-GB.html"
+    }
+  ]
+}

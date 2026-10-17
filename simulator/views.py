@@ -1,5 +1,6 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ImproperlyConfigured
 from django.db import DatabaseError
 from django.shortcuts import redirect, render
 from django.views.decorators.debug import sensitive_post_parameters
@@ -7,31 +8,36 @@ from django.views.decorators.http import require_http_methods
 
 from .forms import DisplayNameForm, RegistrationForm
 from .models import SavedGame
+from .airports import DEFAULT_AIRPORT, available_airports, get_airport, label_saves
 from django.http import Http404
 
 
-# Only maps implemented by the simulator belong in this list.
-AVAILABLE_MAPS = [
-    {'id': 'egll', 'name': 'London Heathrow', 'code': 'EGLL'},
-]
 
 
 def welcome(request):
-    context = {'maps': AVAILABLE_MAPS}
+    try:
+        maps = available_airports()
+        context = {'maps': maps, 'default_map': get_airport(DEFAULT_AIRPORT)}
+    except ImproperlyConfigured as error:
+        return render(request, 'simulator/map_error.html', {'map_error': str(error)}, status=503)
     if request.user.is_authenticated:
         try:
             # Welcome needs only three checkpoints' metadata, never their snapshots.
-            context['recent_saves'] = list(SavedGame.objects.filter(owner=request.user)
-                .only('name', 'airport', 'saved_at', 'is_autosave')[:3])
+            context['recent_saves'] = label_saves(list(SavedGame.objects.filter(owner=request.user)
+                .only('name', 'airport', 'saved_at', 'is_autosave')[:3]))
         except DatabaseError:
             context['recent_saves_error'] = True
     return render(request, 'simulator/welcome.html', context)
 
 
 def index(request):
-    map_id = request.GET.get('map', 'egll')
-    if map_id not in {airport['id'] for airport in AVAILABLE_MAPS}:
+    map_id = request.GET.get('map', DEFAULT_AIRPORT)
+    try:
+        airport = get_airport(map_id)
+    except KeyError:
         raise Http404('This map is not available.')
+    except ImproperlyConfigured as error:
+        return render(request, 'simulator/map_error.html', {'map_error': str(error)}, status=503)
     save_id = request.GET.get('save')
     if save_id:
         if not request.user.is_authenticated:
@@ -45,7 +51,9 @@ def index(request):
         save = owned_save(request, save_id)
         if save.airport != map_id:
             raise Http404('This save belongs to another airport.')
-    return render(request, 'simulator/index.html', {'save_id': save_id})
+    return render(request, 'simulator/index.html', {'save_id': save_id, 'airport': airport,
+        'start_time': f"{airport['traffic']['start_seconds']//3600:02d}:{airport['traffic']['start_seconds']%3600//60:02d}",
+        'example_runway': airport['runways'][-1]['ends'][1]})
 
 
 @sensitive_post_parameters('password1', 'password2')

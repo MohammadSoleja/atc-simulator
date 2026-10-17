@@ -4,23 +4,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ATC Simulator</title>
+  <title>{{ airport.name }} | ATC Simulator</title>
   <link rel="stylesheet" href="{% static 'simulator/css/game.css' %}?v=saved-games">
   <script src="{% static 'simulator/js/theme.js' %}"></script>
 </head>
 <body>
 <div class="app-shell">
   <header class="topbar">
-    <div><span class="brand">ATC SIMULATOR</span><span class="sector">EGLL APPROACH</span></div>
+    <div><span class="brand">ATC SIMULATOR</span><span class="sector">{{ airport.code }} APPROACH</span></div>
     <div class="top-stats">
-      <span>TIME <b id="clock">06:00</b></span>
+      <span>TIME <b id="clock">{{ start_time }}</b></span>
       <div class="speed-buttons" role="group" aria-label="Simulation speed">
         <button type="button" data-speed="1" aria-pressed="false">1×</button>
         <button type="button" data-speed="2" aria-pressed="true">Normal (2×)</button>
         <button type="button" data-speed="4" aria-pressed="false">4×</button>
         <button type="button" data-speed="8" aria-pressed="false">8×</button>
       </div>
-      <span>WIND <b>270/10</b></span>
+      <span>WIND <b>{{ airport.wind.heading }}/{{ airport.wind.speed }}</b></span>
       <span>SCORE <b id="score">0</b></span>
     </div>
   </header>
@@ -109,11 +109,11 @@
         <p><code>BAW123 C 4000</code> altitude in feet</p>
         <p><code>BAW123 S 180</code> speed</p>
         <p><code>BAW123 C CPT</code> direct fix</p>
-        <p><code>BAW123 L 27L</code> land</p>
-        <p>Runways: 09L / 27R, 09R / 27L.</p>
+        <p><code>BAW123 L {{ example_runway }}</code> land</p>
+        <p>Runways: {% for runway in airport.runways %}{{ runway.ends.0 }} / {{ runway.ends.1 }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
         <p><code>BAW123 T</code> takeoff</p>
-        <p><code>BAW123 C 5 R 27L T</code> departure</p>
-        <p><code>R 27L</code> assigns a runway before takeoff.</p>
+        <p><code>BAW123 C 5 R {{ example_runway }} T</code> departure</p>
+        <p><code>R {{ example_runway }}</code> assigns a runway before takeoff.</p>
         <p>△ RNAV fix · ○ radio aid · ◎ NDB</p>
         <p><code>BAW123 G</code> go around</p>
         <p>1–2 digits: altitude × 1,000 ft.<br>001–360: heading. Above 360: feet.</p>
@@ -123,23 +123,25 @@
   <p>Voice: hold Q or the Mic button and speak a callsign followed by instructions. Live speech appears in the command box; release to translate, then check and press Enter. Example: “Speedbird one two three, descend and maintain three thousand, reduce speed to one eight zero, heading two seven zero.” Airline names, spelled letters and phonetic letters are supported. Use “direct Whiskey Oscar Delta” for WOD. Microphone permission is required; your browser may send audio to its speech recognition service. Voice support depends on the browser.</p>
   <p>Live transcription appears in the command box; release Q to review the command draft. Download voice log exports transcripts, alternatives and errors from this tab. Translation errors stay inline and identify the affected instruction. Edit the command box or record again, then check the draft before pressing Enter/Go. Translation does not mean the simulation has accepted a clearance.</p>
   <p>Normal (2×) is the default gameplay pace. The clock shows airport time from 06:00 and advances two minutes per real minute at Normal; 1× halves that rate, 4× doubles it, 8× quadruples it. Pause and Help stop both clock and aircraft.</p>
-  <p>Dashed flight strips preview scheduled traffic 30 seconds before activation (at Normal). Countdown pauses with the game and scales with speed. Departures are blue on radar; arrivals are white. Amber marks selection and red marks conflicts.</p>
-  <p>Traffic is arrival-heavy from 06:00–07:00, mixed during the day and quieter late at night. This is a simplified Heathrow-inspired pattern, with gradual buildup and traffic caps.</p>
+  <p>Dashed flight strips preview scheduled traffic {{ airport.traffic.notice_seconds }} seconds before activation (at Normal). Countdown pauses with the game and scales with speed. Departures are blue on radar; arrivals are white. Amber marks selection and red marks conflicts.</p>
+  <p>{{ airport.traffic.description }}</p>
   <p>Landing: heading within 60° of the runway direction, altitude at or below 3,000 ft. Vector onto the dashed extended centreline before the threshold; clearance alone does not turn the aircraft toward the runway. A late or non-intersecting clearance can miss the approach.</p>
   <p>Radar labels: altitude in hundreds of feet, ↑ climb / ↓ descent / = level, speed in tens of knots. Flight strips show full values.</p>
   <p>Maintain 3 NM lateral or 1,000 ft vertical separation. Departures need altitude and runway assignments before takeoff.</p>
   <p>Departure handoff: fly to the requested FIX shown on the strip at 4,000 ft or above. Reaching within 1.3 NM completes the handoff and earns 80 points. Takeoff alone does not count as a successful departure.</p>
-  <p class="map-credit">Map: OS Open Rivers (Contains OS data © Crown copyright and database right 2026), Natural Earth urban areas. Navigation aids and runways: UK AIP. Map is simplified for gameplay.</p>
+  <p class="map-credit">{{ airport.background.attribution }}</p>
 </dialog>
 <dialog id="infoDialog" class="help-dialog info-dialog" aria-labelledby="infoTitle">
   <div class="panel-title-row"><h2 id="infoTitle">Airlines &amp; voice callsigns</h2><button id="closeInfoBtn" type="button">Close</button></div>
   <p>Say any listed name or spelling, followed by the flight number. Example: “American Airlines seven nine eight” or “Alpha Alpha Lima seven nine eight”. The aircraft must be active. Names are case-insensitive; number digits can be spoken or written.</p>
   <table class="airline-table"><thead><tr><th scope="col">Code</th><th scope="col">Airline</th><th scope="col">Accepted ways to refer to it</th></tr></thead><tbody id="airlineInfoRows"></tbody></table>
-  <p>These airlines can appear in simulator traffic. The mix is for gameplay, rather than a live Heathrow schedule. Closing Info restores your previous pause state.</p>
+  <p>These airlines can appear in simulator traffic. The mix is for gameplay, rather than a live {{ airport.short_name }} schedule. Closing Info restores your previous pause state.</p>
   <p class="map-credit">Codes and radio callsigns: <a href="https://www.faa.gov/air_traffic/publications/atpubs/cnt_html/chap3_section_1.html" target="_blank" rel="noopener">FAA callsign directory</a>. Full names and additional spellings are simulator aliases.</p>
 </dialog>
 <script src="{% static 'simulator/js/airlines.js' %}"></script>
-<script src="{% static 'simulator/js/map-data.js' %}"></script>
+{{ airport|json_script:'airportDefinition' }}
+<script src="{% static airport.background.asset %}"></script>
+<script src="{% static 'simulator/js/airport.js' %}"></script>
 <script src="{% static 'simulator/js/readbacks.js' %}"></script>
 <script src="{% static 'simulator/js/save-format.js' %}"></script>
 <script src="{% static 'simulator/js/game.js' %}"></script>

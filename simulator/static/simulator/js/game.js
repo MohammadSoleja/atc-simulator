@@ -14,58 +14,29 @@
     violations: document.getElementById('violations'), missed: document.getElementById('missed'),
   };
 
+  let loaded;
+  try{
+    const definition=JSON.parse(document.getElementById('airportDefinition').textContent);
+    loaded=window.ATCAirport.initialize(definition,window.ATC_MAP_DATA);
+  }catch(error){
+    window.ATCMapError=true;
+    messageEl.textContent='Map unavailable: '+error.message;
+    document.querySelectorAll('button,input').forEach(control=>control.disabled=true);
+    return;
+  }
+  const {definition,sector,airport,physicalRunways,runways,fixes,departureFixes,geography}=loaded;
+  const traffic=definition.traffic;
   const NORMAL_SIMULATION_RATE = 2;
   let simulationRate = NORMAL_SIMULATION_RATE;
-  const TRAFFIC_INTERVAL = 30;
-  const TRAFFIC_NOTICE_SECONDS = 30;
+  const TRAFFIC_INTERVAL = traffic.interval_seconds;
+  const TRAFFIC_NOTICE_SECONDS = traffic.notice_seconds;
   const GAMEPLAY_PACE = 1.2; // 20% faster aircraft dynamics, independent of the airport clock.
-  // Airport time advances two minutes per real minute at Normal.
-  const SESSION_START_SECONDS = 6*60*60;
+  const SESSION_START_SECONDS = traffic.start_seconds;
   const CLOCK_SECONDS_PER_SIM_SECOND = 1;
-  const MAP_ZOOM = 1.4;
-  const APPROACH_RANGE_NM = 25;
-
-  const sector = { width:100, height:70, latitude:51.4775, longitude:-0.4614 };
-  // Local geographic projection in NM. Keep simulation distances independent of Canvas size.
-  function position(lat, lon){
-    return {x:0.5+(lon-sector.longitude)*60*Math.cos(sector.latitude*Math.PI/180)/sector.width,
-      y:0.5-(lat-sector.latitude)*60/sector.height};
-  }
-  function coordinate(value){
-    const degrees=/[EW]$/.test(value)?3:2;
-    const result=Number(value.slice(0,degrees))+Number(value.slice(degrees,degrees+2))/60+
-      Number(value.slice(degrees+2,-1))/3600;
-    return /[WS]$/.test(value)?-result:result;
-  }
-  function geographicPosition(lat,lon){return position(coordinate(lat),coordinate(lon));}
-  const airport = position(sector.latitude,sector.longitude);
-  // Public NATS UK AIP, 2026-10-01: EGLL AD 2.12 and ENR 4.1.
-  const physicalRunways = [
-    {west:'09L',east:'27R',start:geographicPosition('512839.00N','0002905.97W'),end:geographicPosition('512839.63N','0002559.82W')},
-    {west:'09R',east:'27L',start:geographicPosition('512753.25N','0002856.33W'),end:geographicPosition('512753.82N','0002602.76W')}
-  ];
-  const runways = physicalRunways.flatMap(r=>[
-    {id:r.west,x1:r.start.x,y1:r.start.y,x2:r.end.x,y2:r.end.y,heading:90},
-    {id:r.east,x1:r.end.x,y1:r.end.y,x2:r.start.x,y2:r.start.y,heading:270}
-  ]);
-  const fixes = [
-    ['BPK','514459.05N','0000624.25W'],['LAM','513845.69N','0000906.13E'],
-    ['OCK','511818.17N','0002649.86W'],['BIG','511951.15N','0000205.32E'],
-    ['BNN','514334.19N','0003259.10W'],['CPT','512929.66N','0011310.89W'],
-    ['HEN','514535.07N','0004725.05W'],['WOD','512710.02N','0005243.68W'],
-    ['LON','512914.09N','0002759.54W']
-  ].map(([id,lat,lon])=>({id,kind:id==='CPT'?'VOR/DME':(['HEN','WOD'].includes(id)?'NDB':'DME'),...geographicPosition(lat,lon)}));
-  // Coordinate-defined RNAV fixes from UK AIP ENR 4.4; no procedure routes are implied.
-  fixes.push(...[
-    ['DONNA','514200.38N','0004437.04W'],['DORKI','511633N','0001552W'],
-    ['HILLY','512006.04N','0001437.38E'],['NIGIT','511846.96N','0011014.71W']
-  ].map(([id,lat,lon])=>({id,kind:'RNAV',...geographicPosition(lat,lon)})));
-  const departureFixes = fixes.filter(f=>f.id!=='LON');
+  const MAP_ZOOM = definition.display.zoom;
+  const APPROACH_RANGE_NM = definition.display.approach_range_nm;
   let mapView = {scale:1,left:0,top:0};
-  const mapWidth=1000, mapHeight=700;
-  const mapData=window.ATC_MAP_DATA||{urban:[],rivers:[]};
-  const projectLine=line=>line.map(([lon,lat])=>position(lat,lon));
-  const geography={urban:mapData.urban.map(poly=>poly.map(projectLine)),rivers:mapData.rivers.map(projectLine)};
+  const mapWidth=definition.display.width,mapHeight=definition.display.height;
 
   function drawGeography(){
     ctx.fillStyle='#294c59';ctx.strokeStyle='#355866';ctx.lineWidth=0.7;
@@ -103,9 +74,9 @@
     setSimulationRate(NORMAL_SIMULATION_RATE);
     input.value='';
     resize();
-    spawnArrival();
+    for(let i=0;i<traffic.initial_arrivals;i++)spawnArrival();
     document.getElementById('pauseBtn').textContent='Pause';
-    say('New Heathrow session started.');
+    say(`New ${definition.short_name} session started.`);
   }
 
   function rand(a,b){ return a + Math.random()*(b-a); }
@@ -153,13 +124,13 @@
     const bottom=Math.min(.97,(canvas.height-mapView.top)/(mapHeight*mapView.scale)-.03);
     x=side===1?right:side===3?left:rand(left,right);
     y=side===0?top:side===2?bottom:rand(top,bottom);
-    const altitude = Math.round(rand(65,100))*100;
-    state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'arrival',x,y,heading:hdg,targetHeading:hdg,altitude,targetAltitude:altitude,speed:Math.round(rand(220,270)),targetSpeed:220,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'airborne'});
+    const altitude = Math.round(rand(...traffic.arrival_altitude_hundreds))*100;
+    state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'arrival',x,y,heading:hdg,targetHeading:hdg,altitude,targetAltitude:altitude,speed:Math.round(rand(...traffic.arrival_speed)),targetSpeed:traffic.arrival_target_speed,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'airborne'});
     if(planned)Object.assign(state.aircraft[state.aircraft.length-1],planned);
     pilotReport(state.aircraft[state.aircraft.length-1],'arrival');
   }
   function spawnDeparture(planned=null){
-    state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'departure',x:airport.x,y:airport.y,heading:270,targetHeading:270,altitude:0,targetAltitude:0,speed:0,targetSpeed:0,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'holding',runway:null,exitFix:departureFixes[Math.floor(rand(0,departureFixes.length))].id});
+    state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'departure',x:airport.x,y:airport.y,heading:definition.wind.heading,targetHeading:definition.wind.heading,altitude:0,targetAltitude:0,speed:0,targetSpeed:0,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'holding',runway:null,exitFix:departureFixes[Math.floor(rand(0,departureFixes.length))].id});
     if(planned)Object.assign(state.aircraft[state.aircraft.length-1],planned);
     pilotReport(state.aircraft[state.aircraft.length-1],'departure');
   }
@@ -170,7 +141,7 @@
 
   function assignRunway(a,value){
     const rw=runways.find(r=>r.id===value.replace(/^9/,'09'));
-    if(!rw){say('Unknown runway. Use 09L, 09R, 27L, or 27R.',true);return false;}
+    if(!rw){say('Unknown runway. Use '+runways.map(r=>r.id).join(', ')+'.',true);return false;}
     if(a.kind!=='departure'||a.phase!=='holding'){say('Runway assignment requires a waiting departure.',true);return false;}
     a.runway=rw.id;a.x=rw.x1;a.y=rw.y1;a.heading=rw.heading;a.targetHeading=rw.heading;
     return true;
@@ -179,7 +150,7 @@
   function takeoff(a){
     if(a.kind!=='departure' || a.phase!=='holding'){say(`${a.callsign}: unable takeoff`,true);return false;}
     if(a.targetAltitude<1000){say(`${a.callsign}: assign altitude before takeoff`,true);return false;}
-    if(!a.runway){say(`${a.callsign}: assign a runway first, e.g. R 27L`,true);return false;}
+    if(!a.runway){say(`${a.callsign}: assign a runway first, e.g. R ${runways.at(-1).id}`,true);return false;}
     const rw=runways.find(r=>r.id===a.runway);
     a.phase='takeoff'; a.targetSpeed=profile(a).initialClimb; a.heading=rw.heading; a.targetHeading=rw.heading;
     say(`${a.callsign} cleared for takeoff.`); return true;
@@ -317,41 +288,59 @@
   function selectAircraft(a){ state.selected=a?.id ?? null; input.value=a?`${a.callsign} `:''; input.focus(); renderStrips(); }
 
   function timeOfDaySeconds(){return (SESSION_START_SECONDS+state.clockElapsed)%86400;}
-  // Heathrow documents the 06:00–07:00 arrival peak and scheduled night limits.
-  // Ratios/density below are modest gameplay approximations, not a live timetable.
+  // Airport definitions describe a full day; these are gameplay traffic ratios.
   function trafficPattern(seconds){
-    const minutes=seconds/60;
-    if(minutes<305 || minutes>=1375)return {density:0,arrivalShare:0};
-    if(minutes<360)return {density:0.6,arrivalShare:1};
-    if(minutes<420)return {density:1,arrivalShare:0.75};
-    if(minutes<1360)return {density:1,arrivalShare:0.5};
-    return {density:0.4,arrivalShare:1};
+    const pattern=traffic.patterns.find(p=>seconds/60<p.until_minute)||traffic.patterns.at(-1);
+    return {density:pattern.density,arrivalShare:pattern.arrival_share};
   }
 
-  function updateTraffic(){
+  // Wave times are derived from elapsed play time, so save/resume needs no new timers.
+  // Adjacent wave starts are 5–10 Normal minutes apart, after the initial buildup.
+  function waveTime(index){
+    const sample=Math.sin((index+1)*127.1)*43758.5453;
+    const jitter=sample-Math.floor(sample);
+    return traffic.buildup_seconds+traffic.waves.interval_seconds*(index+1)+traffic.waves.jitter_seconds*jitter;
+  }
+  function queueFlight(kind,dueAt){
+    const flight={callsign:callsign(),kind,type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],dueAt};
+    if(kind==='departure')flight.exitFix=departureFixes[Math.floor(rand(0,departureFixes.length))].id;
+    else {flight.altitude=Math.round(rand(...traffic.arrival_altitude_hundreds))*100;flight.targetAltitude=flight.altitude;flight.speed=Math.round(rand(...traffic.arrival_speed));}
+    state.upcoming.push(flight);
+  }
+  function updateTraffic(previousTrafficTime=state.trafficElapsed){
     const pending=state.upcoming[0];
     if(pending && state.trafficElapsed>=pending.dueAt){
       const {dueAt,...flight}=pending;
       flight.kind==='arrival'?spawnArrival(flight):spawnDeparture(flight);
       state.upcoming.shift();state.lastSpawn=state.trafficElapsed;
     }
+    if(traffic.waves){
+      const index=Math.max(0,Math.floor((state.trafficElapsed-traffic.buildup_seconds)/traffic.waves.interval_seconds)-1);
+      for(let i=index;i<=index+1;i++){
+        const at=waveTime(i);
+        if(previousTrafficTime<at&&state.trafficElapsed>=at&&trafficPattern(timeOfDaySeconds()).density>0){
+          const kinds=[...Array(2+Math.floor(Math.random()*2)).fill('arrival'),...Array(1+Math.floor(Math.random()*2)).fill('departure')];
+          // Shuffle the mix and stagger activations, each with a full advance notice.
+          for(let j=kinds.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[kinds[j],kinds[k]]=[kinds[k],kinds[j]];}
+          let due=Math.max(state.trafficElapsed+TRAFFIC_NOTICE_SECONDS,...state.upcoming.map(f=>f.dueAt+traffic.waves.spacing_seconds));
+          for(const kind of kinds){
+            const activationTime=(timeOfDaySeconds()+(due-state.trafficElapsed)*NORMAL_SIMULATION_RATE*CLOCK_SECONDS_PER_SIM_SECOND)%86400;
+            const wavePattern=trafficPattern(activationTime);
+            // Honour closed hours and arrival-only periods at activation time.
+            if(wavePattern.density>0&&(kind==='arrival'||wavePattern.arrivalShare<1))queueFlight(kind,due);
+            due+=traffic.waves.spacing_seconds;
+          }
+        }
+      }
+    }
     if(state.upcoming.length)return;
     // Choose the next flight once and reserve its identity for the preview strip.
     const futureTime=(timeOfDaySeconds()+TRAFFIC_NOTICE_SECONDS*NORMAL_SIMULATION_RATE*CLOCK_SECONDS_PER_SIM_SECOND)%86400;
     const pattern=trafficPattern(futureTime);
     if(pattern.density===0){state.lastSpawn=state.trafficElapsed;return;}
-    const interval=TRAFFIC_INTERVAL*(1+Math.max(0,1-state.trafficElapsed/300))/pattern.density;
+    const interval=TRAFFIC_INTERVAL*(1+Math.max(0,1-state.trafficElapsed/traffic.buildup_seconds))/pattern.density;
     if(state.trafficElapsed-state.lastSpawn<Math.max(0,interval-TRAFFIC_NOTICE_SECONDS))return;
-    const arrivals=state.aircraft.filter(a=>a.kind==='arrival'&&!a.landed&&a.removeAt===undefined).length;
-    const waiting=state.aircraft.filter(a=>a.kind==='departure'&&a.phase==='holding').length;
-    const kind=Math.random()<pattern.arrivalShare?'arrival':'departure';
-    if((kind==='arrival'&&arrivals>=5)||(kind==='departure'&&waiting>=2)){
-      state.lastSpawn=state.trafficElapsed;return;
-    }
-    const flight={callsign:callsign(),kind,type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],dueAt:state.trafficElapsed+TRAFFIC_NOTICE_SECONDS};
-    if(kind==='departure')flight.exitFix=departureFixes[Math.floor(rand(0,departureFixes.length))].id;
-    else {flight.altitude=Math.round(rand(65,100))*100;flight.targetAltitude=flight.altitude;flight.speed=Math.round(rand(220,270));}
-    state.upcoming.push(flight);
+    queueFlight(Math.random()<pattern.arrivalShare?'arrival':'departure',state.trafficElapsed+TRAFFIC_NOTICE_SECONDS);
   }
 
   function update(dt, clockDt=dt){
@@ -360,8 +349,9 @@
     state.clockElapsed+=clockDt*CLOCK_SECONDS_PER_SIM_SECOND;
     // Preserve Normal spawning pace; other speeds advance the same traffic model.
     const pace=NORMAL_SIMULATION_RATE;
+    const previousTrafficTime=state.trafficElapsed;
     state.trafficElapsed+=clockDt/pace;
-    updateTraffic();
+    updateTraffic(previousTrafficTime);
 
     for(const a of [...state.aircraft]){
       if(a.removeAt!==undefined || a.phase==='holding')continue;
@@ -431,7 +421,7 @@
     const landingRunway=runways.find(r=>r.id===arrival.clearedToLand);
     const takeoffRunway=runways.find(r=>r.id===departure.runway);
     if(!landingRunway||!takeoffRunway||landingRunway.heading!==takeoffRunway.heading)return false;
-    const samePhysicalRunway=physicalRunways.some(r=>[r.west,r.east].includes(landingRunway.id)&&[r.west,r.east].includes(takeoffRunway.id));
+    const samePhysicalRunway=physicalRunways.some(r=>r.ends.includes(landingRunway.id)&&r.ends.includes(takeoffRunway.id));
     if(samePhysicalRunway)return false;
     const landing=runwayPosition(arrival,landingRunway),takeoff=runwayPosition(departure,takeoffRunway);
     const length=distance({x:takeoffRunway.x1,y:takeoffRunway.y1},{x:takeoffRunway.x2,y:takeoffRunway.y2});
@@ -455,7 +445,7 @@
     }
     const first=finalRunway(a),second=finalRunway(b);
     if(!first||!second||first.heading!==second.heading)return false;
-    return !physicalRunways.some(r=>[r.west,r.east].includes(first.id)&&[r.west,r.east].includes(second.id));
+    return !physicalRunways.some(r=>r.ends.includes(first.id)&&r.ends.includes(second.id));
   }
 
   function checkSeparation(){
@@ -488,9 +478,11 @@
       ctx.lineTo(x+sin*(radius-(heading%90===0?7:3)),y-cos*(radius-(heading%90===0?7:3)));ctx.stroke();
       if(heading%90===0)ctx.fillText(heading===0?'360':String(heading).padStart(3,'0'),x+sin*(radius+12),y-cos*(radius+12));
     }
-    ctx.fillText('WIND',x,y-6);ctx.fillText('270° / 10 kt',x,y+7);
+    ctx.fillText('WIND',x,y-6);ctx.fillText(`${definition.wind.heading}° / ${definition.wind.speed} kt`,x,y+7);
     // Marker on the west side shows the direction the wind comes FROM.
-    ctx.beginPath();ctx.moveTo(x-radius+10,y);ctx.lineTo(x-radius+17,y-4);ctx.lineTo(x-radius+17,y+4);ctx.closePath();ctx.fill();
+    ctx.beginPath();const windAngle=definition.wind.heading*Math.PI/180;
+    const wx=x+Math.sin(windAngle)*(radius-10),wy=y-Math.cos(windAngle)*(radius-10);
+    ctx.moveTo(wx,wy);ctx.lineTo(wx-Math.sin(windAngle)*7+Math.cos(windAngle)*4,wy+Math.cos(windAngle)*7+Math.sin(windAngle)*4);ctx.lineTo(wx-Math.sin(windAngle)*7-Math.cos(windAngle)*4,wy+Math.cos(windAngle)*7-Math.sin(windAngle)*4);ctx.closePath();ctx.fill();
     ctx.restore();
   }
 
@@ -514,7 +506,7 @@
       else {ctx.arc(x,y,5,0,Math.PI*2);}
       ctx.stroke();
       if(f.kind==='NDB'){ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.stroke();}
-      ctx.fillStyle='#b0c7d3';ctx.fillText(f.id,f.id==='LON'?x-30:x,f.id==='LON'?y-22:y+12);
+      ctx.fillStyle='#b0c7d3';ctx.fillText(f.id,x+f.label_offset[0],y+f.label_offset[1]);
     }
     // Extended approach paths use the same capture range as landing guidance.
     ctx.save();ctx.strokeStyle='#6e909f';ctx.lineWidth=0.6;ctx.setLineDash([3,5]);
@@ -529,12 +521,13 @@
       // Their centre/centreline stay geographic; aircraft and landing thresholds
       // continue using the real runway coordinates, independent of this glyph.
       const cx=(r.start.x+r.end.x)*w/2,cy=(r.start.y+r.end.y)*h/2;
-      const halfLength=Math.max((r.end.x-r.start.x)*w*1.1,22/mapView.scale);
-      const labelY=cy+(index===0?-10:10)/mapView.scale;
+      const halfLength=Math.max(Math.abs((r.end.x-r.start.x)*w*Math.sin(r.heading*Math.PI/180)-(r.end.y-r.start.y)*h*Math.cos(r.heading*Math.PI/180))*1.1,22/mapView.scale);
+      const labelY=(index===0?-10:10)/mapView.scale;
+      ctx.save();ctx.translate(cx,cy);ctx.rotate((r.heading-90)*Math.PI/180);
       ctx.strokeStyle='#dae7ee';ctx.lineWidth=2.5/mapView.scale;
-      ctx.beginPath();ctx.moveTo(cx-halfLength,cy);ctx.lineTo(cx+halfLength,cy);ctx.stroke();
-      ctx.fillStyle='#c0d2dd';ctx.textAlign='right';ctx.fillText(r.west,cx-halfLength-5/mapView.scale,labelY);
-      ctx.textAlign='left';ctx.fillText(r.east,cx+halfLength+5/mapView.scale,labelY);ctx.textAlign='center';
+      ctx.beginPath();ctx.moveTo(-halfLength,0);ctx.lineTo(halfLength,0);ctx.stroke();
+      ctx.fillStyle='#c0d2dd';ctx.textAlign='right';ctx.fillText(r.ends[0],-halfLength-5/mapView.scale,labelY);
+      ctx.textAlign='left';ctx.fillText(r.ends[1],halfLength+5/mapView.scale,labelY);ctx.restore();ctx.textAlign='center';
     }
     ctx.lineWidth=1;
     drawCompass();
@@ -560,9 +553,9 @@
     stripsEl.innerHTML='';
     for(const a of state.aircraft){
       const d=document.createElement('div');d.className=`strip ${a.kind} ${state.selected===a.id?'selected':''}`;
-      d.innerHTML=`<div class="strip-top"><span class="callsign">${a.callsign}</span><span class="kind">${a.kind==='arrival'?'ARR':'DEP'}</span></div><div class="strip-bottom"><span>${a.type}</span><span>${Math.round(a.altitude)}ft</span><span>${Math.round(a.speed)}kt</span></div>${a.kind==='departure'?`<div class="strip-bottom">${a.runway?'RWY '+a.runway:'Assign runway: R 27L / R 27R / R 09L / R 09R'} · FIX ${a.exitFix}</div>`:''}`;
+      d.innerHTML=`<div class="strip-top"><span class="callsign">${a.callsign}</span><span class="kind">${a.kind==='arrival'?'ARR':'DEP'}</span></div><div class="strip-bottom"><span>${a.type}</span><span>${Math.round(a.altitude)}ft</span><span>${Math.round(a.speed)}kt</span></div>${a.kind==='departure'?`<div class="strip-bottom">${a.runway?'RWY '+a.runway:'Assign runway: '+runways.map(r=>'R '+r.id).join(' / ')} · FIX ${a.exitFix}</div>`:''}`;
       const airportDistance=document.createElement('div');airportDistance.className='strip-bottom';
-      airportDistance.textContent=`${distance(a,airport).toFixed(1)} NM from Heathrow`;
+      airportDistance.textContent=`${distance(a,airport).toFixed(1)} NM from ${definition.short_name}`;
       d.appendChild(airportDistance);
       if(a.kind==='arrival'&&a.clearedToLand){
         const status=document.createElement('div');status.className='strip-bottom';
@@ -573,6 +566,7 @@
     for(const flight of state.upcoming){
       // Small update steps can leave an exact second just above an integer.
       const seconds=Math.max(0,Math.ceil(flight.dueAt-state.trafficElapsed-1e-7));
+      if(seconds>TRAFFIC_NOTICE_SECONDS)continue;
       const strip=document.createElement('div');strip.className=`strip upcoming ${flight.kind}`;
       strip.innerHTML=`<div class="strip-top"><span class="callsign">${flight.callsign}</span><span class="kind">${flight.kind==='arrival'?'ARR':'DEP'}</span></div><div class="strip-bottom"><span>${flight.type}</span><span>${flight.kind==='arrival'?flight.altitude+'ft':flight.exitFix}</span></div><div class="strip-bottom upcoming-countdown">Coming in ${seconds}s · not active yet</div>`;
       stripsEl.appendChild(strip);
@@ -648,11 +642,11 @@
     const ids=new Set(copy.aircraft.map(a=>a.id));
     copy.conflicts=[...state.conflicts].filter(pair=>pair.split('-').every(id=>ids.has(Number(id))));
     for(const a of copy.aircraft)a.nav=a.nav?.id||null;
-    return {version:1,airport:'egll',session_id:sessionId,pace:simulationRate,state:copy};
+    return {version:1,airport:definition.id,session_id:sessionId,pace:simulationRate,state:copy};
   }
   function restoreSnapshot(snapshot){
     // Validate and construct first. A rejected save must not mutate the running game.
-    window.ATCSaveFormat.validate(snapshot,{types:aircraftTypes,fixes:fixes.map(f=>f.id),runways:runways.map(r=>r.id)});
+    window.ATCSaveFormat.validate(snapshot,{airport:definition.id,departureFixes:departureFixes.map(f=>f.id),types:aircraftTypes,fixes:fixes.map(f=>f.id),runways:runways.map(r=>r.id)});
     const restored=JSON.parse(JSON.stringify(snapshot.state));
     for(const a of restored.aircraft)a.nav=a.nav?findFix(a.nav):null;
     restored.conflicts=new Set(restored.conflicts);restored.selected=null;restored.paused=true;
@@ -661,7 +655,7 @@
     document.getElementById('pauseBtn').textContent='Resume';
     renderStrips();updateUI();say('Saved game loaded. Review the traffic, then Resume.');
   }
-  window.ATCGame={exportSnapshot,restoreSnapshot,isPaused:()=>state.paused,
+  window.ATCGame={airport:definition.id,airportName:definition.short_name,exportSnapshot,restoreSnapshot,isPaused:()=>state.paused,
     setPaused(value){state.paused=value;document.getElementById('pauseBtn').textContent=value?'Resume':'Pause';},
     notify:say};
 

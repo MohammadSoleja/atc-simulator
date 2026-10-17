@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "id": "test",
+  "code": "TEST",
+  "name": "Test Airport",
+  "short_name": "Test Field",
+  "sector": {
+    "width": 80,
+    "height": 80,
+    "latitude": 52,
+    "longitude": -1
+  },
+  "display": {
+    "width": 1000,
+    "height": 1000,
+    "zoom": 1.4,
+    "approach_range_nm": 25
+  },
+  "wind": {
+    "heading": 180,
+    "speed": 5
+  },
+  "runways": [
+    {
+      "ends": [
+        "18",
+        "36"
+      ],
+      "headings": [
+        180,
+        0
+      ],
+      "start": [
+        "520100.00N",
+        "0010000.00W"
+      ],
+      "end": [
+        "515900.00N",
+        "0010000.00W"
+      ]
+    }
+  ],
+  "fixes": [
+    {
+      "id": "TST1",
+      "latitude": "521000.00N",
+      "longitude": "0010000.00W",
+      "kind": "RNAV",
+      "label_offset": [
+        0,
+        12
+      ]
+    },
+    {
+      "id": "TST2",
+      "latitude": "515000.00N",
+      "longitude": "0010000.00W",
+      "kind": "DME",
+      "label_offset": [
+        0,
+        12
+      ]
+    }
+  ],
+  "departure_fixes": [
+    "TST2"
+  ],
+  "traffic": {
+    "start_seconds": 21600,
+    "interval_seconds": 30,
+    "notice_seconds": 30,
+    "buildup_seconds": 300,
+    "max_arrivals": 5,
+    "max_waiting_departures": 2,
+    "initial_arrivals": 1,
+    "arrival_altitude_hundreds": [
+      65,
+      100
+    ],
+    "arrival_speed": [
+      220,
+      270
+    ],
+    "arrival_target_speed": 220,
+    "patterns": [
+      {
+        "until_minute": 1440,
+        "density": 1,
+        "arrival_share": 0.5
+      }
+    ],
+    "description": "Synthetic map used only by tests."
+  },
+  "background": {
+    "asset": "simulator/js/map-data.js",
+    "attribution": "Map: OS Open Rivers (Contains OS data \u00a9 Crown copyright and database right 2026), Natural Earth urban areas. Navigation aids and runways: UK AIP. Map is simplified for gameplay.",
+    "sources": [
+      {
+        "name": "OS Open Rivers, April 2026",
+        "url": "https://www.ordnancesurvey.co.uk/products/os-open-rivers",
+        "licence": "Open Government Licence v3",
+        "licence_url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+      },
+      {
+        "name": "Natural Earth urban areas",
+        "url": "https://www.naturalearthdata.com/",
+        "licence": "Public domain",
+        "licence_url": "https://www.naturalearthdata.com/about/terms-of-use/"
+      }
+    ]
+  },
+  "aeronautical_sources": [
+    {
+      "name": "UK AIP EGLL AD 2.12 and ENR 4.1/4.4, 2026-10-01",
+      "url": "https://www.aurora.nats.co.uk/htmlAIP/Publications/2026-10-01-AIRAC/html/index-en-GB.html"
+    }
+  ]
+}

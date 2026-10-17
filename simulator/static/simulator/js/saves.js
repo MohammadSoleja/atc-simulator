@@ -1,7 +1,7 @@
 /* Account saves never interrupt aircraft motion on network failure. */
 (() => {
   const config=document.getElementById('saveConfig');
-  if(!config)return;
+  if(!config||!window.ATCGame)return;
   const game=window.ATCGame;
   const dialog=document.getElementById('saveDialog');
   const form=document.getElementById('saveForm');
@@ -39,7 +39,7 @@
   document.getElementById('saveBtn').addEventListener('click',()=>{
     if(loading||failedLoad)return;
     previousPause=game.isPaused();game.setPaused(true);
-    name.value='Heathrow '+new Date().toLocaleString();feedback.textContent='';dialog.showModal();name.focus();
+    name.value=game.airportName+' '+new Date().toLocaleString();feedback.textContent='';dialog.showModal();name.focus();
   });
   document.getElementById('closeSaveBtn').addEventListener('click',()=>{if(!busy)dialog.close();});
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});

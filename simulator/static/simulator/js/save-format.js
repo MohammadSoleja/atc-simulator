@@ -5,7 +5,7 @@
     const object = value => value && typeof value === 'object' && !Array.isArray(value);
     const number = (value, low=0, high=1e9) => Number.isFinite(value) && value >= low && value <= high;
     if (!object(save) || save.version !== 1) fail('Unsupported save version.');
-    if (save.airport !== 'egll') fail('This airport is not available.');
+    if (save.airport !== context.airport) fail('This airport is not available.');
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(save.session_id)) fail('Invalid game session.');
     if (![1,2,4,8].includes(save.pace)) fail('Invalid simulation pace.');
     const s = save.state;
@@ -14,7 +14,7 @@
     if (Object.keys(s).length !== stateKeys.length || stateKeys.some(key => !(key in s))) fail('Incomplete simulation state.');
     for (const key of stateKeys.slice(0,9)) if (!number(s[key]) || (['nextId','landings','handoffs','violations','missed'].includes(key) && !Number.isInteger(s[key]))) fail(`Invalid ${key}.`);
     if (s.nextId < 1 || !Number.isInteger(s.score) || !number(s.score,-1e9) || s.lastSpawn > s.trafficElapsed) fail('Invalid game counters.');
-    if (!Array.isArray(s.aircraft) || s.aircraft.length > 100 || !Array.isArray(s.upcoming) || s.upcoming.length > 1 || !Array.isArray(s.conflicts)) fail('Invalid traffic lists.');
+    if (!Array.isArray(s.aircraft) || s.aircraft.length > 100 || !Array.isArray(s.upcoming) || s.upcoming.length > 6 || !Array.isArray(s.conflicts)) fail('Invalid traffic lists.');
     const ids = new Set(), callsigns = new Set();
     const identity = a => {
       if (!object(a) || !/^[A-Z]{3}[0-9]{1,7}$/.test(a.callsign) || callsigns.has(a.callsign) || !context.types.includes(a.type) || !['arrival','departure'].includes(a.kind)) fail('Invalid aircraft identity.');
@@ -33,7 +33,7 @@
       if (a.nav !== null && !context.fixes.includes(a.nav)) fail('Unknown navigation fix.');
       if (a.clearedToLand !== null && !context.runways.includes(a.clearedToLand)) fail('Unknown landing runway.');
       if (a.runway != null && !context.runways.includes(a.runway)) fail('Unknown departure runway.');
-      if (a.kind === 'departure' && (!context.fixes.includes(a.exitFix) || a.exitFix === 'LON' || (a.phase === 'takeoff' && !a.runway))) fail('Invalid departure route.');
+      if (a.kind === 'departure' && (!context.departureFixes.includes(a.exitFix) || (a.phase === 'takeoff' && !a.runway))) fail('Invalid departure route.');
       if (a.approachCaptured && !a.clearedToLand) fail('Missing approach runway.');
       if ('removeAt' in a && !number(a.removeAt)) fail('Invalid removal timer.');
       if (!Array.isArray(a.trail) || a.trail.length > 8 || a.trail.some(p => !object(p) || !number(p.x,-2,3) || !number(p.y,-2,3) || !number(p.t,0,s.elapsed))) fail('Invalid aircraft trail.');
@@ -41,7 +41,7 @@
     for (const a of s.upcoming) {
       identity(a);
       if (!number(a.dueAt)) fail('Invalid traffic notice.');
-      if (a.kind === 'departure' && !context.fixes.includes(a.exitFix)) fail('Invalid pending departure.');
+      if (a.kind === 'departure' && !context.departureFixes.includes(a.exitFix)) fail('Invalid pending departure.');
       if (a.kind === 'arrival' && (!number(a.altitude,0,100000) || !number(a.targetAltitude,0,100000) || !number(a.speed,0,350))) fail('Invalid pending arrival.');
     }
     const pairs = new Set();

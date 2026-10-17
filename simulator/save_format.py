@@ -3,12 +3,11 @@ import math
 import re
 from uuid import UUID
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+
+from .airports import get_airport
 
 VERSION = 1
-AIRPORT = 'egll'
-FIXES = {'BPK', 'LAM', 'OCK', 'BIG', 'BNN', 'CPT', 'HEN', 'WOD', 'LON', 'DONNA', 'DORKI', 'HILLY', 'NIGIT'}
-RUNWAYS = {'09L', '09R', '27L', '27R'}
 TYPES = {'A320', 'A321', 'B738', 'B789', 'A20N', 'B77W'}
 TIMERS = {'elapsed', 'clockElapsed', 'trafficElapsed', 'lastSpawn'}
 COUNTERS = {'landings', 'handoffs', 'violations', 'missed', 'nextId'}
@@ -52,7 +51,15 @@ def validate_snapshot(snapshot):
     fields(snapshot, {'version', 'airport', 'session_id', 'pace', 'state'})
     if type(snapshot['version']) is not int or snapshot['version'] != VERSION:
         fail('Unsupported save version. This game supports version 1.')
-    choice(snapshot['airport'], {AIRPORT}, 'airport')
+    if not isinstance(snapshot['airport'], str):
+        fail('Unknown airport.')
+    try:
+        airport = get_airport(snapshot['airport'])
+    except (KeyError, ImproperlyConfigured):
+        fail('This airport is not available or its configuration is invalid.')
+    fixes = {fix['id'] for fix in airport['fixes']}
+    runways = {end for runway in airport['runways'] for end in runway['ends']}
+    departure_fixes = set(airport['departure_fixes'])
     try:
         UUID(snapshot['session_id'])
     except (ValueError, TypeError, AttributeError):
@@ -95,11 +102,11 @@ def validate_snapshot(snapshot):
         if 'removeAt' in a:
             number(a['removeAt'], 'removal timer')
         choice(a['phase'], {'holding', 'takeoff', 'airborne', 'landed'}, 'aircraft phase')
-        choice(a['nav'], FIXES, 'navigation fix', nullable=True)
-        choice(a['clearedToLand'], RUNWAYS, 'landing runway', nullable=True)
-        choice(a.get('runway'), RUNWAYS, 'departure runway', nullable=True)
+        choice(a['nav'], fixes, 'navigation fix', nullable=True)
+        choice(a['clearedToLand'], runways, 'landing runway', nullable=True)
+        choice(a.get('runway'), runways, 'departure runway', nullable=True)
         if a['kind'] == 'departure':
-            choice(a.get('exitFix'), FIXES - {'LON'}, 'departure exit fix')
+            choice(a.get('exitFix'), departure_fixes, 'departure exit fix')
             if a['phase'] not in {'holding', 'takeoff', 'airborne'} or a['clearedToLand'] or a['landed']:
                 fail('Invalid departure state.')
             if a['phase'] == 'takeoff' and not a.get('runway'):
@@ -117,8 +124,8 @@ def validate_snapshot(snapshot):
             number(point['x'], 'trail x', low=-2, high=3)
             number(point['y'], 'trail y', low=-2, high=3)
             number(point['t'], 'trail timestamp', high=state['elapsed'])
-    if not isinstance(state['upcoming'], list) or len(state['upcoming']) > 1:
-        fail('A save may contain at most one pending flight.')
+    if not isinstance(state['upcoming'], list) or len(state['upcoming']) > 6:
+        fail('A save may contain at most six pending flights.')
     for flight in state['upcoming']:
         fields(flight, {'callsign', 'kind', 'type', 'dueAt'}, {'exitFix', 'altitude', 'targetAltitude', 'speed'})
         identity(flight)
@@ -126,7 +133,7 @@ def validate_snapshot(snapshot):
             fail('Pending callsign is already active.')
         number(flight['dueAt'], 'activation time')
         if flight['kind'] == 'departure':
-            choice(flight.get('exitFix'), FIXES - {'LON'}, 'pending exit fix')
+            choice(flight.get('exitFix'), departure_fixes, 'pending exit fix')
         else:
             for key in ['altitude', 'targetAltitude', 'speed']:
                 number(flight.get(key), f'pending {key}', high=350 if key == 'speed' else 100000)
