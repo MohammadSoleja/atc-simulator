@@ -79,8 +79,9 @@ def validate_snapshot(snapshot):
     number(state['score'], 'score', low=-1e9, integer=True)
     if state['lastSpawn'] > state['trafficElapsed']:
         fail('Traffic timer is inconsistent.')
-    if not isinstance(state['aircraft'], list) or len(state['aircraft']) > 100:
-        fail('A save may contain at most 100 active aircraft.')
+    # The request byte limit bounds resource use; traffic itself has no count cap.
+    if not isinstance(state['aircraft'], list):
+        fail('Invalid aircraft list.')
     ids, callsigns = set(), set()
     for a in state['aircraft']:
         fields(a, AIRCRAFT_REQUIRED, AIRCRAFT_OPTIONAL)
@@ -142,7 +143,7 @@ def validate_snapshot(snapshot):
         else:
             for key in ['altitude', 'targetAltitude', 'speed']:
                 number(flight.get(key), f'pending {key}', high=350 if key == 'speed' else 100000)
-    if not isinstance(state['conflicts'], list) or len(state['conflicts']) > 4950:
+    if not isinstance(state['conflicts'], list) or len(state['conflicts']) > len(ids) * (len(ids) - 1) // 2:
         fail('Invalid conflict list.')
     seen = set()
     for pair in state['conflicts']:

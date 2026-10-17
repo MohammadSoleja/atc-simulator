@@ -62,3 +62,17 @@ console.log('PASS: snapshot round trip, pending flights, navigation/runways, pau
  context.window.ATCGame.restoreSnapshot(snapshot);
  assert.deepEqual(clone(context.window.ATCGame.exportSnapshot()),snapshot,'wave save round trip');
 }
+
+// Uncapped busy sessions must restore beyond the old 100-aircraft boundary.
+{
+ const {engine,context}=createEngine();
+ for(let i=1;i<120;i++)engine.spawnArrival();
+ const s=engine.getState();
+ for(let i=0;i<s.aircraft.length;i++)for(let j=i+1;j<s.aircraft.length;j++)s.conflicts.add(`${s.aircraft[i].id}-${s.aircraft[j].id}`);
+ const snapshot=clone(context.window.ATCGame.exportSnapshot());
+ assert.equal(snapshot.state.aircraft.length,120);
+ assert.ok(snapshot.state.conflicts.length>4950);
+ context.window.ATCGame.restoreSnapshot(snapshot);
+ assert.deepEqual(clone(context.window.ATCGame.exportSnapshot()),snapshot,'busy session restores without loss');
+}
+console.log('PASS: 120-aircraft browser save/restore with more than 4,950 conflict pairs.');
