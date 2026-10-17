@@ -1,5 +1,12 @@
 const assert=require('node:assert/strict');
-const {createEngine}=require('./harness.cjs');
+const {createEngine:makeEngine}=require('./harness.cjs');
+// Keep coverage for airports using the original mixed scheduler. Heathrow's
+// independent arrival stream is tested separately in arrival-traffic.cjs.
+function createEngine(){
+ const definition=JSON.parse(require('node:fs').readFileSync('simulator/airports/egll.json','utf8'));
+ delete definition.traffic.arrival_interval_seconds;
+ return makeEngine(undefined,definition);
+}
 
 const minute=(hour,min=0)=>hour*3600+min*60;
 function atTime(engine,seconds){engine.getState().clockElapsed=(seconds-minute(6)+86400)%86400;}
@@ -27,7 +34,7 @@ const bands=[
 
 // Clock wrap and all offered traffic in a repeatable complete day. Clear active
 // aircraft after recording them to measure demand independently of controller
-// throughput/caps; this is not an unattended-play difficulty benchmark.
+// throughput; this is not an unattended-play difficulty benchmark.
 const report=bands.map(([start,end])=>({start,end,arrivals:0,departures:0}));
 {
   const {engine}=createEngine();
@@ -43,7 +50,7 @@ const report=bands.map(([start,end])=>({start,end,arrivals:0,departures:0}));
       if(time<minute(6)||time>=minute(22,40))assert.equal(aircraft.kind,'arrival');
     }
     state.aircraft=[];
-    assert.ok(state.upcoming.length<=1,'one reserved preview at a time');
+    assert.ok(state.upcoming.length<=6,'bounded staggered wave queue');
   }
   assert.equal(engine.timeOfDaySeconds(),0,'full day wraps to midnight');
   for(const row of report){
@@ -148,29 +155,25 @@ for(const [time,random,expected] of [
   }
 }
 
-// Saturated arrivals must not stop departure offers or vice versa. Test the
-// automatic limits over an hour with no aircraft movement or manual spawning.
+// Traffic keeps arriving even when the controller has not cleared existing flights.
 {
   const {engine}=createEngine();const state=engine.getState();atTime(engine,minute(12));
-  for(let seconds=0;seconds<3600;seconds++){
+  let sawWave=false;
+  for(let seconds=0;seconds<1800;seconds++){
     tick(engine);
-    assert.ok(state.aircraft.filter(a=>a.kind==='arrival').length<=5);
-    assert.ok(state.aircraft.filter(a=>a.kind==='departure'&&a.phase==='holding').length<=2);
+    if(state.upcoming.length>=3){
+      sawWave=true;
+      const arrivals=state.upcoming.filter(f=>f.kind==='arrival').length;
+      const departures=state.upcoming.filter(f=>f.kind==='departure').length;
+      assert.ok(arrivals<=4&&departures<=3,'wave plus at most one baseline preview');
+      for(let i=1;i<state.upcoming.length;i++)assert.ok(state.upcoming[i].dueAt-state.upcoming[i-1].dueAt>=15);
+      engine.renderStrips();
+      assert.ok(!JSON.stringify(state.upcoming).includes('undefined'));
+    }
   }
-  assert.equal(state.aircraft.filter(a=>a.kind==='arrival').length,5);
-  assert.equal(state.aircraft.filter(a=>a.kind==='departure').length,2);
-  state.aircraft=state.aircraft.filter(a=>a.kind==='departure');
-  for(let seconds=0;seconds<600;seconds++)tick(engine);
-  assert.equal(state.aircraft.filter(a=>a.kind==='arrival').length,5,'arrivals continue with departure queue full');
-  state.aircraft=state.aircraft.filter(a=>a.kind==='arrival');
-  for(let seconds=0;seconds<600;seconds++)tick(engine);
-  assert.equal(state.aircraft.filter(a=>a.kind==='departure').length,2,'departures continue with arrivals full');
-  const departing=state.aircraft.find(a=>a.kind==='departure');
-  engine.parseCommand(`${departing.callsign} C 5 R 27L T`);
-  assert.equal(departing.phase,'takeoff');
-  for(let seconds=0;seconds<600;seconds++)tick(engine);
-  assert.equal(state.aircraft.filter(a=>a.kind==='departure'&&a.phase==='holding').length,2,'takeoff frees a waiting slot');
-  assert.equal(state.aircraft.filter(a=>a.kind==='departure').length,3,'total departures are not capped at two');
+  assert.ok(sawWave,'waves occur after buildup');
+  assert.ok(state.aircraft.filter(a=>a.kind==='arrival').length>5,'arrivals are uncapped');
+  assert.ok(state.aircraft.filter(a=>a.kind==='departure').length>2,'waiting departures are uncapped');
 }
 
 {
@@ -185,4 +188,4 @@ console.table(report.map(({start,end,arrivals,departures})=>({
   period:`${String(Math.floor(start/3600)).padStart(2,'0')}:${String(start/60%60).padStart(2,'0')}–${end===86400?'24:00':`${String(Math.floor(end/3600)).padStart(2,'0')}:${String(end/60%60).padStart(2,'0')}`}`,
   arrivals,departures
 })));
-console.log('PASS G04: full-day mix, boundaries, buildup, previews, pause/dialogs, all paces, caps and restart.');
+console.log('PASS G04: full-day mix, boundaries, buildup, previews, pause/dialogs, all paces, uncapped traffic, waves and restart.');

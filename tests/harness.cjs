@@ -3,7 +3,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 // Load the actual browser engine in isolation. Test hooks never ship to the UI.
-function createEngine(sourcePath) {
+function createEngine(sourcePath,definition) {
+  definition=definition||JSON.parse(fs.readFileSync(path.join(__dirname,'../simulator/airports/egll.json'),'utf8'));
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) {
@@ -19,11 +20,14 @@ function createEngine(sourcePath) {
     }
     return elements.get(id);
   }
+  element('airportDefinition').textContent=JSON.stringify(definition);
   const context = vm.createContext({
     document:{getElementById:element,querySelectorAll:()=>[],createElement:()=>({children:[],appendChild(child){this.children.push(child);}})},
     ResizeObserver:class {observe(){}},window:{addEventListener(){},crypto:{randomUUID:()=>'12345678-1234-4234-8234-123456789012'}},
     performance:{now:()=>0},requestAnimationFrame(){}
   });
+  context.window.ATC_MAP_DATA={urban:[],rivers:[]};
+  vm.runInContext(fs.readFileSync(path.join(__dirname,'../simulator/static/simulator/js/airport.js'),'utf8'),context);
   // Reproducible aircraft types and callsigns, including the legacy suite.
   vm.runInContext('let testSeed=12345; Math.random=()=>((testSeed=(testSeed*1664525+1013904223)>>>0)/4294967296);',context);
   const startup='  reset();resize();renderStrips();requestAnimationFrame(frame);';

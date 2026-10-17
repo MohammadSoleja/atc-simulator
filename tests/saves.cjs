@@ -46,6 +46,33 @@ engine.update(0,0);const landed=clone(game.exportSnapshot());
 assert.equal(landed.state.landings,1);assert.equal(landed.state.aircraft[0].phase,'landed');
 game.restoreSnapshot(landed);game.setPaused(false);engine.advanceSimulation(3);
 assert.equal(engine.getState().landings,1);assert.equal(engine.getState().aircraft.some(a=>a.id===arrival.id),false);
-// Export one real-engine fixture for server compatibility tests.
-assert.deepEqual(before,JSON.parse(fs.readFileSync('tests/fixtures/save-v1.json','utf8')),'browser snapshot matches the server compatibility fixture');
+// The pre-independent-scheduler fixture must still load without mutation.
+const legacy=JSON.parse(fs.readFileSync('tests/fixtures/save-v1.json','utf8'));
+game.restoreSnapshot(legacy);
+assert.deepEqual(clone(game.exportSnapshot()),legacy,'legacy server/browser fixture remains compatible');
 console.log('PASS: snapshot round trip, pending flights, navigation/runways, paused load, atomic rejection, conflict and landing deduplication.');
+
+// A staggered wave retains identities and due times across save/restore.
+{
+ const {engine,context}=createEngine();
+ const state=engine.getState();state.trafficElapsed=750;state.lastSpawn=750;
+ for(let i=0;i<180&&state.upcoming.length<3;i++)engine.update(0,2);
+ assert.ok(state.upcoming.length>=3,'wave queued');
+ const snapshot=clone(context.window.ATCGame.exportSnapshot());
+ context.window.ATCGame.restoreSnapshot(snapshot);
+ assert.deepEqual(clone(context.window.ATCGame.exportSnapshot()),snapshot,'wave save round trip');
+}
+
+// Uncapped busy sessions must restore beyond the old 100-aircraft boundary.
+{
+ const {engine,context}=createEngine();
+ for(let i=1;i<120;i++)engine.spawnArrival();
+ const s=engine.getState();
+ for(let i=0;i<s.aircraft.length;i++)for(let j=i+1;j<s.aircraft.length;j++)s.conflicts.add(`${s.aircraft[i].id}-${s.aircraft[j].id}`);
+ const snapshot=clone(context.window.ATCGame.exportSnapshot());
+ assert.equal(snapshot.state.aircraft.length,120);
+ assert.ok(snapshot.state.conflicts.length>4950);
+ context.window.ATCGame.restoreSnapshot(snapshot);
+ assert.deepEqual(clone(context.window.ATCGame.exportSnapshot()),snapshot,'busy session restores without loss');
+}
+console.log('PASS: 120-aircraft browser save/restore with more than 4,950 conflict pairs.');

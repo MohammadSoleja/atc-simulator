@@ -48,6 +48,33 @@ class SavedGameTests(TestCase):
         self.assertEqual(response.json()['snapshot'], self.snapshot)
         self.assertContains(self.client.get(reverse('index'), {'save': save.pk}), 'data-load-url=')
 
+    def test_busy_session_manual_and_autosave_round_trip(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        state = snapshot['state']
+        aircraft = state['aircraft'][0]
+        state['aircraft'] = []
+        for index in range(1, 121):
+            flight = copy.deepcopy(aircraft)
+            flight.update(id=index, callsign=f'BAW{1000 + index}')
+            state['aircraft'].append(flight)
+        state['nextId'] = 121
+        # More than 4,950 valid pairs also exceeded the old implicit 100-aircraft limit.
+        state['conflicts'] = [f'{first}-{second}' for first in range(1, 121) for second in range(first + 1, 121)]
+        for autosave in [False, True]:
+            with self.subTest(autosave=autosave):
+                response = self.save_request(autosave=autosave, snapshot=snapshot)
+                self.assertEqual(response.status_code, 200)
+                loaded = self.client.get(reverse('load_game', args=[response.json()['id']]))
+                self.assertEqual(loaded.status_code, 200)
+                self.assertEqual(loaded.json()['snapshot'], snapshot)
+
+    def test_oversized_save_preserves_existing_autosave(self):
+        from .save_views import MAX_SAVE_BYTES
+        saved = self.save_request(autosave=True).json()['id']
+        response = self.client.post(reverse('save_game'), ' ' * (MAX_SAVE_BYTES + 1), content_type='application/json')
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(SavedGame.objects.get(pk=saved).snapshot, self.snapshot)
+
     def test_autosave_replaces_only_its_own_slot(self):
         self.save_request()
         first = self.save_request(autosave=True).json()['id']

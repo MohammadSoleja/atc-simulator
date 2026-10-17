@@ -3,7 +3,7 @@
   const digits={zero:'0',oh:'0',one:'1',two:'2',three:'3',four:'4',five:'5',six:'6',seven:'7',eight:'8',nine:'9',niner:'9'};
   const phonetics='alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo sierra tango uniform victor whiskey xray yankee zulu'.split(' ');
   const letters=Object.fromEntries(phonetics.map((word,i)=>[word,String.fromCharCode(65+i)]));
-  Object.assign(letters,{alfa:'A',juliett:'J',whisky:'W',pappa:'P'});
+  Object.assign(letters,{alfa:'A',juliett:'J',whisky:'W',pappa:'P',mic:'M',mick:'M'});
   const airlineAliases=window.ATC_AIRLINES.flatMap(a=>a.aliases.map(alias=>[alias,a.code]))
     .sort((a,b)=>b[0].length-a[0].length);
   function tokens(text){
@@ -224,7 +224,7 @@
     return null;
   }
   const input=document.getElementById('commandInput'),button=document.getElementById('voiceBtn'),status=document.getElementById('voiceStatus');
-  if(!button)return;
+  if(!button||window.ATCMapError)return;
   let latestFeedback=null;
   window.ATCVoice.getFeedback=()=>latestFeedback?{...latestFeedback}:null;
   const diagnostics=[];

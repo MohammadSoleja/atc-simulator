@@ -9,7 +9,7 @@
 {% for save in saves %}
 <article class="saved-game">
   <h2>{{ save.name }}{% if save.is_autosave %} · Auto{% endif %}</h2>
-  <p class="account-note">{% if save.airport == 'egll' %}London Heathrow (EGLL){% else %}{{ save.airport }}{% endif %}<br>{{ save.saved_at|utc|date:'d M Y, H:i' }} UTC</p>
+  <p class="account-note">{{ save.airport_label }}<br>{{ save.saved_at|utc|date:'d M Y, H:i' }} UTC</p>
   <p class="save-actions"><a href="{% url 'index' %}?map={{ save.airport|urlencode }}&amp;save={{ save.pk }}">Continue</a>
   {% if not save.is_autosave %}<a href="{% url 'rename_save' save.pk %}">Rename</a>{% endif %}
   <a href="{% url 'delete_save' save.pk %}">Delete</a></p>
