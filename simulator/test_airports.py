@@ -101,3 +101,19 @@ class AirportConfigurationTests(SimpleTestCase):
         snapshot['state']['trafficSchedule']['arrival'] = -1
         with self.assertRaises(ValidationError):
             validate_snapshot(snapshot)
+
+
+    def test_pending_callsigns_are_unique_across_the_snapshot(self):
+        original = json.loads((Path(settings.BASE_DIR) / 'tests/fixtures/save-v1.json').read_text())
+        for duplicate in [original['state']['upcoming'][0]['callsign'], original['state']['aircraft'][0]['callsign']]:
+            snapshot = copy.deepcopy(original)
+            flight = copy.deepcopy(snapshot['state']['upcoming'][0])
+            flight['callsign'] = duplicate
+            snapshot['state']['upcoming'].append(flight)
+            with self.assertRaisesMessage(ValidationError, 'Pending callsigns must be unique'):
+                validate_snapshot(snapshot)
+        snapshot = copy.deepcopy(original)
+        flight = copy.deepcopy(snapshot['state']['upcoming'][0])
+        flight['callsign'] = 'BAW9999'
+        snapshot['state']['upcoming'].append(flight)
+        validate_snapshot(snapshot)

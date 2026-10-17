@@ -134,7 +134,8 @@ def validate_snapshot(snapshot):
         fields(flight, {'callsign', 'kind', 'type', 'dueAt'}, {'exitFix', 'altitude', 'targetAltitude', 'speed'})
         identity(flight)
         if flight['callsign'] in callsigns:
-            fail('Pending callsign is already active.')
+            fail('Pending callsigns must be unique across active and pending flights.')
+        callsigns.add(flight['callsign'])
         number(flight['dueAt'], 'activation time')
         if flight['kind'] == 'departure':
             choice(flight.get('exitFix'), departure_fixes, 'pending exit fix')
