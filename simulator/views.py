@@ -1,3 +1,5 @@
+import math
+
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured
@@ -51,9 +53,14 @@ def index(request):
         save = owned_save(request, save_id)
         if save.airport != map_id:
             raise Http404('This save belongs to another airport.')
+    elevation = airport.get('elevation_ft', 0)
     return render(request, 'simulator/index.html', {'save_id': save_id, 'airport': airport,
         'start_time': f"{airport['traffic']['start_seconds']//3600:02d}:{airport['traffic']['start_seconds']%3600//60:02d}",
-        'example_runway': airport['runways'][-1]['ends'][1]})
+        'example_runway': airport['runways'][-1]['ends'][1],
+        'example_altitude': math.floor((elevation + 3000)/1000),
+        'departure_altitude': max(5, math.ceil((elevation + 4000)/1000)),
+        'handoff_altitude': math.ceil((elevation + 4000)/1000)*1000,
+        'example_fix': airport['departure_fixes'][0]})
 
 
 @sensitive_post_parameters('password1', 'password2')

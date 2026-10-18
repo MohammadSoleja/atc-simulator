@@ -15,9 +15,12 @@
     try{
       if(data.version!==1||!/^[a-z0-9]{4}$/.test(data.id)||!/^[A-Z0-9]{4}$/.test(data.code)||!data.name||!data.short_name)fail('identity/version');
       const s=data.sector,d=data.display,t=data.traffic;
+      const elevation=data.elevation_ft??0;
+      if(!finite(elevation,-1500,15000)||!['radar','desert'].includes(data.background.style??'radar'))fail('elevation/background style');
       if(!finite(s.width,10,500)||!finite(s.height,10,500)||!finite(s.latitude,-85,85)||!finite(s.longitude,-180,180))fail('sector bounds');
       if(Math.abs(d.width/d.height-s.width/s.height)>.001)fail('display/sector aspect ratio');
       if(!finite(d.width,100,5000)||!finite(d.height,100,5000)||!finite(d.zoom,.5,4)||!finite(d.approach_range_nm,1,100))fail('display');
+      for(const key of ['view_width_nm','view_height_nm'])if(d[key]!==undefined&&!finite(d[key],10,500))fail('view dimensions');
       const position=(lat,lon)=>({x:0.5+(lon-s.longitude)*60*Math.cos(s.latitude*Math.PI/180)/s.width,y:0.5-(lat-s.latitude)*60/s.height});
       const point=values=>position(coordinate(values[0],true),coordinate(values[1],false));
       if(!Array.isArray(data.runways)||!data.runways.length)fail('runways');
@@ -25,11 +28,13 @@
       for(const r of data.runways){
         if(r.ends.length!==2||r.headings.length!==2)fail('runway endpoints');
         const start=point(r.start),end=point(r.end);
+        const elevations=r.threshold_elevations_ft??[elevation,elevation];
+        if(elevations.length!==2||elevations.some(e=>!finite(e,-1500,15000)||Math.abs(e-elevation)>500))fail('threshold elevations');
         if(start.x===end.x&&start.y===end.y)fail('zero-length runway');
         for(let i=0;i<2;i++){
           if(!/^(0[1-9]|[12][0-9]|3[0-6])[LRC]?$/.test(r.ends[i])||ids.has(r.ends[i])||!finite(r.headings[i],0,360))fail('runway identifier/heading');
           const p=i?end:start,q=i?start:end;ids.add(r.ends[i]);
-          runways.push({id:r.ends[i],x1:p.x,y1:p.y,x2:q.x,y2:q.y,heading:r.headings[i]%360});
+          runways.push({id:r.ends[i],x1:p.x,y1:p.y,x2:q.x,y2:q.y,heading:r.headings[i]%360,elevation:elevations[i]});
         }
         const [a,b]=r.ends;
         if((Number(a.slice(0,2))-Number(b.slice(0,2))+36)%36!==18||({L:'R',R:'L',C:'C','':''})[a.slice(2)]!==b.slice(2)||Math.abs((r.headings[1]-r.headings[0]+360)%360-180)>.01)fail('reciprocal runways');
@@ -38,14 +43,25 @@
       const fixIds=new Set();
       const fixes=data.fixes.map(f=>{
         if(!/^[A-Z0-9]{2,8}$/.test(f.id)||fixIds.has(f.id)||!['RNAV','DME','VOR/DME','NDB'].includes(f.kind)||!Array.isArray(f.label_offset)||f.label_offset.length!==2||f.label_offset.some(n=>!finite(n,-100,100)))fail('navigation fix');
-        fixIds.add(f.id);return {id:f.id,kind:f.kind,label_offset:f.label_offset,...point([f.latitude,f.longitude])};
+        const position=point([f.latitude,f.longitude]);
+        // Optional, explicit gameplay adjustment moves both the marker and the
+        // navigation target; published coordinates remain in the definition.
+        if(f.position_offset_nm!==undefined){
+          const offset=f.position_offset_nm;
+          if(!offset||!finite(offset.east,-20,20)||!finite(offset.north,-20,20))fail('fix gameplay offset');
+          position.x+=offset.east/s.width;position.y-=offset.north/s.height;
+        }
+        fixIds.add(f.id);return {id:f.id,kind:f.kind,label_offset:f.label_offset,...position};
       });
       if(!fixes.length||!data.departure_fixes.length||new Set(data.departure_fixes).size!==data.departure_fixes.length||data.departure_fixes.some(id=>!fixIds.has(id)))fail('departure fixes');
       for(const [key,min,max] of [['start_seconds',0,86399],['interval_seconds',1,3600],['notice_seconds',1,3600],['buildup_seconds',1,3600],['initial_arrivals',0,100]])if(!Number.isInteger(t[key])||!finite(t[key],min,max))fail('traffic '+key);
       for(const [key,min,max] of [['arrival_altitude_hundreds',1,999],['arrival_speed',140,350]])if(t[key].length!==2||t[key].some(n=>!finite(n,min,max))||t[key][0]>t[key][1])fail('traffic '+key);
       if(t.arrival_interval_seconds!==undefined&&(!Number.isInteger(t.arrival_interval_seconds)||!finite(t.arrival_interval_seconds,15,3600)))fail('arrival interval');
       if(t.waves){
+        if(t.waves.enabled!==undefined&&typeof t.waves.enabled!=='boolean')fail('wave enabled flag');
         for(const [key,min,max] of [['spacing_seconds',1,30],['interval_seconds',300,600],['jitter_seconds',0,150]])if(!Number.isInteger(t.waves[key])||!finite(t.waves[key],min,max))fail('wave '+key);
+        for(const [key,fallback] of [['arrivals',2],['departures',1]])if(!Number.isInteger(t.waves[key]??fallback)||!finite(t.waves[key]??fallback,0,3))fail('wave '+key);
+        if(!finite((t.waves.arrivals??2)+(t.waves.departures??1),1,5))fail('wave size');
         if(t.waves.jitter_seconds>=t.waves.interval_seconds)fail('wave timing');
       }
       if(!finite(t.arrival_target_speed,140,350))fail('initial traffic');

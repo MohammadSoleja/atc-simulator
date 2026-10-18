@@ -5,6 +5,7 @@ const {createEngine:makeEngine}=require('./harness.cjs');
 function createEngine(){
  const definition=JSON.parse(require('node:fs').readFileSync('simulator/airports/egll.json','utf8'));
  delete definition.traffic.arrival_interval_seconds;
+ definition.traffic.waves.enabled=true;
  return makeEngine(undefined,definition);
 }
 

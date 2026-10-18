@@ -213,14 +213,13 @@ step or expose test controls in the game.
 Normal aircraft dynamics now run 20% faster, uniformly scaling movement, turns,
 altitude and speed changes; indicated speeds and aircraft envelopes are unchanged.
 The airport clock advances two minutes per real minute at Normal. Automatic traffic has a 30-second
-base interval for the mixed scheduler. Heathrow uses independent streams:
-arrivals build down from roughly 60 to 20 Normal real seconds during the first
-five minutes, while departures retain their time-of-day cadence (roughly 60
-seconds during daytime mixed traffic). Traffic is uncapped. After buildup,
-small mixed waves occur roughly every 5–10 Normal playing minutes: 2–3 arrivals
-and 1–2 departures, staggered 20 seconds apart. Only flights within 30 seconds
-of activation appear in preview strips. Waves pause and scale with game speed,
-survive save/resume, and respect closed/arrival-only hours.
+base interval for the mixed scheduler. Both airports currently use independent
+arrival streams that build down from roughly 60 to 45 Normal real seconds during
+the first five minutes. Departures retain their time-of-day cadence (roughly
+60 seconds during daytime mixed traffic). Traffic is uncapped. Waves are temporarily disabled on both airports. Their two-arrival/one-departure
+settings are retained for later retuning. Existing queued
+flights in saves retain their promised activation times. New arrivals use the
+slower interval; loading does not delete an existing traffic backlog.
 A narrow separation exception applies only to an established final within 3 NM,
 at/below 1,000 ft and within 0.1 NM of its centreline, paired with a takeoff
 roll or aligned initial climb on a different parallel runway in the same
@@ -441,13 +440,20 @@ Heathrow now loads from `simulator/airports/egll.json`. The local registry in
 fixes, sector bounds, traffic settings, wind and background attribution are
 separate from the generic Canvas engine. Restart retains the chosen map; command
 and save validation use that map's identifiers. Existing Heathrow saves remain compatible; Heathrow traffic is now uncapped
-with occasional mixed waves.
+with independent arrival timing and configurable waves (currently two arrivals and one departure).
 
 See [airport-definitions.md](docs/airport-definitions.md) for the schema and
 validation. The next airport is **Riyadh (RUH/OERK)**, approved for both runway
 pairs/directions and a 100 × 100 NM sector. Its scoped sources and implementation
 notes are in [riyadh-scope.md](docs/riyadh-scope.md). Riyadh becomes playable in
-M04–M06; it is not yet offered in the map selector.
+M04–M06. A local **Playtest** preview is now available while `DEBUG=True`; it
+is hidden in production until owner approval. See
+[riyadh-playtest.md](docs/riyadh-playtest.md) for commands, elevation handling,
+source provenance and the acceptance checklist.
 
 Run `node tests/arrival-traffic.cjs` for independent-stream timing, overlapping
 30-second notices, wave spacing, pause, game speeds and save/resume coverage.
+
+Riyadh checks: `node tests/riyadh.cjs` and
+`python manage.py test simulator.test_riyadh`. Heathrow regressions remain in
+the existing JavaScript and Django suites.

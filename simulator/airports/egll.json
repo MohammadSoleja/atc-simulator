@@ -251,13 +251,16 @@
         "arrival_share": 0
       }
     ],
-    "description": "Arrival-heavy early mornings, mixed daytime traffic, with a five-minute buildup and occasional staggered waves. Traffic is uncapped.",
+    "description": "Arrival-heavy early mornings and mixed daytime departures, with a five-minute buildup. Arrivals settle to one every 45 Normal seconds; Additional waves are temporarily disabled. Traffic is uncapped.",
     "waves": {
-      "spacing_seconds": 20,
+      "enabled": false,
       "interval_seconds": 450,
-      "jitter_seconds": 150
+      "jitter_seconds": 150,
+      "spacing_seconds": 20,
+      "arrivals": 2,
+      "departures": 1
     },
-    "arrival_interval_seconds": 20
+    "arrival_interval_seconds": 45
   },
   "background": {
     "asset": "simulator/js/map-data.js",

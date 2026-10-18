@@ -4,13 +4,15 @@ const {createEngine}=require('./harness.cjs');
 const definition=()=>JSON.parse(fs.readFileSync('simulator/airports/egll.json','utf8'));
 const clone=x=>JSON.parse(JSON.stringify(x));
 function setup(waves=false){
- const data=definition();if(!waves)delete data.traffic.waves;
+ const data=definition();
+ if(!waves)delete data.traffic.waves;
+ else {data.traffic.waves.enabled=true;data.traffic.arrival_interval_seconds=20;}
  const result=createEngine(undefined,data),s=result.engine.getState();
  s.aircraft=[];s.trafficElapsed=300;s.lastSpawn=300;s.clockElapsed=6*3600;
  return result;
 }
 function step(engine,seconds=1){engine.update(0,seconds*2);engine.cleanup();}
-// Independent streams: three arrivals/minute and one departure/minute at midday,
+// Independent streams: roughly 1.3 arrivals/minute and one departure/minute at midday,
 // with overlapping full notices. No aircraft are cleared to free spawning slots.
 {
  const {engine,element,context}=setup();const s=engine.getState();engine.update(0,0);
@@ -27,9 +29,9 @@ function step(engine,seconds=1){engine.update(0,seconds*2);engine.cleanup();}
    (a.kind==='arrival'?arrivals:departures).push(s.trafficElapsed);
   }
  }
- assert.ok(arrivals.length>=13&&arrivals.length<=14);
+ assert.ok(arrivals.length===6);
  assert.ok(departures.length>=4&&departures.length<=5);
- for(let i=1;i<arrivals.length;i++)assert.equal(arrivals[i]-arrivals[i-1],20);
+ for(let i=1;i<arrivals.length;i++)assert.equal(arrivals[i]-arrivals[i-1],45);
  for(let i=1;i<departures.length;i++)assert.equal(departures[i]-departures[i-1],60);
  assert.ok(s.upcoming.filter(f=>f.kind==='arrival').length>=1,'arrival previews continue');
  const snapshot=clone(context.window.ATCGame.exportSnapshot());
@@ -54,8 +56,48 @@ function step(engine,seconds=1){engine.update(0,seconds*2);engine.cleanup();}
 }
 // Faster game paces reserve the same traffic after equivalent simulated time.
 for(const pace of [1,2,4,8]){
- const {engine}=setup();engine.setSimulationRate(pace);engine.advanceSimulation(62/pace);
- assert.ok(Math.abs(engine.getState().trafficElapsed-331)<1e-6);
+ const {engine}=setup();engine.setSimulationRate(pace);engine.advanceSimulation(92/pace);
+ assert.ok(Math.abs(engine.getState().trafficElapsed-346)<1e-6);
  assert.equal(engine.getState().aircraft.filter(a=>a.kind==='arrival').length,1);
 }
-console.log('PASS: independent 20-second arrivals, unchanged departure cadence, full overlapping notices, wave spacing, save/resume, pause and all paces.');
+console.log('PASS: independent 45-second arrivals, unchanged departure cadence, full overlapping notices, wave spacing, save/resume, pause and all paces.');
+
+// Actual default configs use exactly two arrivals and one departure in each wave, even
+// across wave trigger times and with aircraft neither landed nor cleared.
+for(const airport of ['egll','oerk']){
+ const data=JSON.parse(fs.readFileSync(`simulator/airports/${airport}.json`,'utf8'));
+ // Exercise the retained optional wave settings independently of the live toggle.
+ data.traffic.waves.enabled=true;
+ const {engine}=createEngine(undefined,data),s=engine.getState();
+ s.aircraft=[];s.trafficElapsed=300;s.lastSpawn=300;s.clockElapsed=6*3600;
+ let waves=0;
+ for(let i=0;i<1200;i++){
+  const before=new Set(s.upcoming.map(f=>f.callsign));
+  step(engine);s.aircraft=[];
+  const added=s.upcoming.filter(f=>!before.has(f.callsign));
+  if(added.length>=3){
+   waves++;assert.equal(added.length,3);
+   assert.equal(added.filter(f=>f.kind==='arrival').length,2);
+   assert.equal(added.filter(f=>f.kind==='departure').length,1);
+   for(let j=1;j<added.length;j++)assert.ok(added[j].dueAt-added[j-1].dueAt>=20);
+  }
+  assert.ok(s.upcoming.length<=5,'small wave plus existing notices');
+ }
+ assert.ok(waves>=2,`${airport}: mixed waves enabled`);
+ assert.equal(data.traffic.arrival_interval_seconds,45,'regular arrival interval retained');
+}
+console.log('PASS: both production map configurations keep 45-second regular arrivals and fixed 2-arrival/1-departure waves.');
+
+for(const airport of ['egll','oerk']){
+ const data=JSON.parse(fs.readFileSync(`simulator/airports/${airport}.json`,'utf8'));
+ assert.equal(data.traffic.waves.enabled,false);
+ const {engine}=createEngine(undefined,data),s=engine.getState();
+ s.aircraft=[];s.trafficElapsed=300;s.lastSpawn=300;s.clockElapsed=6*3600;
+ const counts={arrival:0,departure:0};
+ for(let i=0;i<1200;i++){
+  step(engine);for(const a of s.aircraft)counts[a.kind]++;s.aircraft=[];
+  assert.ok(s.upcoming.length<=2,'no wave queue');
+ }
+ assert.equal(counts.arrival,26);assert.equal(counts.departure,20);
+}
+console.log('PASS: live Heathrow/Riyadh wave toggles disabled; regular traffic unchanged.');

@@ -54,7 +54,8 @@ console.log('PASS: snapshot round trip, pending flights, navigation/runways, pau
 
 // A staggered wave retains identities and due times across save/restore.
 {
- const {engine,context}=createEngine();
+ const waveDefinition=JSON.parse(fs.readFileSync('simulator/airports/egll.json','utf8'));waveDefinition.traffic.waves.enabled=true;
+ const {engine,context}=createEngine(undefined,waveDefinition);
  const state=engine.getState();state.trafficElapsed=750;state.lastSpawn=750;
  for(let i=0;i<180&&state.upcoming.length<3;i++)engine.update(0,2);
  assert.ok(state.upcoming.length>=3,'wave queued');

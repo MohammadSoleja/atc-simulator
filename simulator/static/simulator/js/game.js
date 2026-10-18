@@ -26,6 +26,17 @@
   }
   const {definition,sector,airport,physicalRunways,runways,fixes,departureFixes,geography}=loaded;
   const traffic=definition.traffic;
+  const airportElevation=definition.elevation_ft??0;
+  const goAroundAltitude=Math.ceil((airportElevation+3000)/1000)*1000;
+  const handoffAltitude=Math.ceil((airportElevation+4000)/1000)*1000;
+  function groundAltitude(a){
+    const runway=runways.find(r=>r.id===(a.kind==='arrival'?a.clearedToLand:a.runway));
+    return runway?.elevation??airportElevation;
+  }
+  function assignAltitude(a,altitude){
+    if(airportElevation>0&&altitude<airportElevation){say(`${a.callsign}: altitude must be at least ${Math.ceil(airportElevation).toLocaleString('en-GB')} ft at this airport.`,true);return false;}
+    a.targetAltitude=altitude;return true;
+  }
   const NORMAL_SIMULATION_RATE = 2;
   let simulationRate = NORMAL_SIMULATION_RATE;
   const TRAFFIC_INTERVAL = traffic.interval_seconds;
@@ -39,7 +50,8 @@
   const mapWidth=definition.display.width,mapHeight=definition.display.height;
 
   function drawGeography(){
-    ctx.fillStyle='#294c59';ctx.strokeStyle='#355866';ctx.lineWidth=0.7;
+    const desert=definition.background.style==='desert';
+    ctx.fillStyle=desert?'#555448':'#294c59';ctx.strokeStyle=desert?'#666354':'#355866';ctx.lineWidth=0.7;
     for(const polygon of geography.urban){
       ctx.beginPath();
       for(const ring of polygon){ring.forEach((p,i)=>i?ctx.lineTo(p.x*mapWidth,p.y*mapHeight):ctx.moveTo(p.x*mapWidth,p.y*mapHeight));ctx.closePath();}
@@ -130,7 +142,7 @@
     pilotReport(state.aircraft[state.aircraft.length-1],'arrival');
   }
   function spawnDeparture(planned=null){
-    state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'departure',x:airport.x,y:airport.y,heading:definition.wind.heading,targetHeading:definition.wind.heading,altitude:0,targetAltitude:0,speed:0,targetSpeed:0,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'holding',runway:null,exitFix:departureFixes[Math.floor(rand(0,departureFixes.length))].id});
+    state.aircraft.push({id:state.nextId++,callsign:callsign(),type:aircraftTypes[Math.floor(rand(0,aircraftTypes.length))],kind:'departure',x:airport.x,y:airport.y,heading:definition.wind.heading,targetHeading:definition.wind.heading,altitude:airportElevation,targetAltitude:airportElevation,speed:0,targetSpeed:0,verticalSpeed:0,trail:[],clearedToLand:null,landed:false,nav:null,phase:'holding',runway:null,exitFix:departureFixes[Math.floor(rand(0,departureFixes.length))].id});
     if(planned)Object.assign(state.aircraft[state.aircraft.length-1],planned);
     pilotReport(state.aircraft[state.aircraft.length-1],'departure');
   }
@@ -143,22 +155,36 @@
     const rw=runways.find(r=>r.id===value.replace(/^9/,'09'));
     if(!rw){say('Unknown runway. Use '+runways.map(r=>r.id).join(', ')+'.',true);return false;}
     if(a.kind!=='departure'||a.phase!=='holding'){say('Runway assignment requires a waiting departure.',true);return false;}
+    const oldGround=groundAltitude(a);
+    if(a.targetAltitude===oldGround)a.targetAltitude=rw.elevation;
+    a.altitude=rw.elevation;
     a.runway=rw.id;a.x=rw.x1;a.y=rw.y1;a.heading=rw.heading;a.targetHeading=rw.heading;
     return true;
   }
 
   function takeoff(a){
     if(a.kind!=='departure' || a.phase!=='holding'){say(`${a.callsign}: unable takeoff`,true);return false;}
-    if(a.targetAltitude<1000){say(`${a.callsign}: assign altitude before takeoff`,true);return false;}
+    if(a.targetAltitude<groundAltitude(a)+1000){say(`${a.callsign}: assign altitude before takeoff`,true);return false;}
     if(!a.runway){say(`${a.callsign}: assign a runway first, e.g. R ${runways.at(-1).id}`,true);return false;}
     const rw=runways.find(r=>r.id===a.runway);
     a.phase='takeoff'; a.targetSpeed=profile(a).initialClimb; a.heading=rw.heading; a.targetHeading=rw.heading;
     say(`${a.callsign} cleared for takeoff.`); return true;
   }
 
+  function clearNavigation(a){
+    a.nav=null;
+    if(a.route)a.route=[];
+  }
+  function assignRoute(a,points){
+    if(points.length>20){say('Use at most 20 waypoints in one route.',true);return false;}
+    // A new direct-to clearance replaces the entire previous route.
+    a.nav=points[0];a.route=points.slice(1).map(f=>f.id);
+    if(a.clearedToLand){a.clearedToLand=null;a.approachCaptured=false;a.targetAltitude=a.altitude;}
+    return `head direct to ${points.map(f=>f.id).join(', then ')}`;
+  }
   function applyClearance(a, value){
     const fix = findFix(value);
-    if(fix){ a.nav=fix; return `head direct to ${fix.id}`; }
+    if(fix)return assignRoute(a,[fix]);
     if(!/^\d+$/.test(value)){
       say(`Invalid clearance: ${value}. Use C 3, C 010, or C CPT.`,true);
       return false;
@@ -170,12 +196,12 @@
     }
     // Short numbers are thousands of feet; three digits preserve leading-zero headings.
     // Values above 360 are altitude clearances in feet.
-    if(value.length<=2){ a.targetAltitude=number*1000; }
+    if(value.length<=2){ if(!assignAltitude(a,number*1000))return false; }
     else if(value.length===3 && number>=1 && number<=360){
       a.targetHeading=normalizeHeading(number);
-      a.nav=null;
+      clearNavigation(a);
     }
-    else if(number>360){ a.targetAltitude=number; }
+    else if(number>360){ if(!assignAltitude(a,number))return false; }
     else {
       say('Use headings 001–360, short altitudes (C 3), or feet above 360 (C 4000).',true);
       return false;
@@ -193,8 +219,8 @@
     if(a.kind!=='arrival'||a.phase!=='airborne'||a.landed||a.removeAt!==undefined){
       say(`${a.callsign}: go-around requires an airborne arrival.`,true);return false;
     }
-    a.clearedToLand=null;a.approachCaptured=false;a.nav=null;
-    a.targetAltitude=Math.max(3000,a.targetAltitude);
+    a.clearedToLand=null;a.approachCaptured=false;clearNavigation(a);
+    a.targetAltitude=Math.max(goAroundAltitude,a.targetAltitude);
     a.targetSpeed=Math.max(190,a.targetSpeed);
     a.targetHeading=normalizeHeading(a.heading+30);
     return `go around, ${altitudeReadback(a)}, heading ${Math.round(a.targetHeading)}°, speed ${a.targetSpeed} kt`;
@@ -210,9 +236,10 @@
     const rw=runways.find(r=>r.id===id.replace(/^9/,'09'));
     if(!rw){say('Unknown runway.',true);return false;}
     if(a.kind!=='arrival'||a.landed){say(`${a.callsign}: not an airborne arrival`,true);return false;}
-    if(a.altitude>3000){say(`${a.callsign}: unable landing clearance above 3,000 ft; descend first.`,true);return false;}
+    const ceiling=rw.elevation+3000;
+    if(a.altitude>ceiling){say(`${a.callsign}: unable landing clearance above ${ceiling.toLocaleString('en-GB')} ft; descend first.`,true);return false;}
     if(Math.abs(turnDelta(a.heading,rw.heading))>60){say(`${a.callsign}: vector within 60° of heading ${rw.heading} before landing clearance.`,true);return false;}
-    a.clearedToLand=rw.id;a.nav=null;a.approachCaptured=false;
+    a.clearedToLand=rw.id;clearNavigation(a);a.approachCaptured=false;
     a.targetHeading=a.heading;
     return `cleared to land runway ${rw.id}, maintain heading until centreline interception`;
   }
@@ -239,7 +266,7 @@
       const correction=Math.max(-25,Math.min(25,Math.atan2(p.cross,lookAhead)*180/Math.PI));
       a.targetHeading=normalizeHeading(rw.heading+correction);
       // Approximate 3° glide path: 318 ft/NM. Never climb to join it from below.
-      a.targetAltitude=Math.min(a.altitude,Math.max(0,(p.ahead-0.1)*318));
+      a.targetAltitude=Math.min(a.altitude,Math.max(rw.elevation,rw.elevation+(p.ahead-0.1)*318));
       a.targetSpeed=profile(a).approach;
     }
   }
@@ -262,9 +289,20 @@
     commandResponse={callsign:a.callsign,instructions:readback,error:''};
     while(i<t.length){
       const cmd=t[i++];
-      if(cmd==='C' && i<t.length){const result=applyClearance(a,t[i++]);if(!result)return;readback.push(result);}
-      else if(cmd==='H' && i<t.length){const h=Number(t[i++]); if(!Number.isFinite(h))return say('Invalid heading.',true);a.targetHeading=normalizeHeading(h);a.nav=null;readback.push(`heading ${String(a.targetHeading).padStart(3,'0')}°`);}
-      else if((cmd==='A'||cmd==='ALT') && i<t.length){let alt=Number(t[i++]);if(!Number.isFinite(alt)||alt<0)return say('Invalid altitude.',true); if(alt<100)alt*=1000; a.targetAltitude=alt;readback.push(altitudeReadback(a));}
+      if(['C','D','DIRECT'].includes(cmd)&&i<t.length&&findFix(t[i])){
+        const points=[findFix(t[i++])];
+        // Consecutive waypoint clauses in this submission form one route.
+        // A speed/altitude/heading clause ends the group, preserving command order.
+        while(i+1<t.length&&['C','D','DIRECT'].includes(t[i])&&!/^\d+$/.test(t[i+1])){
+          const next=findFix(t[i+1]);
+          if(!next)return say(`Unknown fix: ${t[i+1]}.`,true);
+          points.push(next);i+=2;
+        }
+        const result=assignRoute(a,points);if(!result)return;readback.push(result);
+      }
+      else if(cmd==='C' && i<t.length){const result=applyClearance(a,t[i++]);if(!result)return;readback.push(result);}
+      else if(cmd==='H' && i<t.length){const h=Number(t[i++]); if(!Number.isFinite(h))return say('Invalid heading.',true);a.targetHeading=normalizeHeading(h);clearNavigation(a);readback.push(`heading ${String(a.targetHeading).padStart(3,'0')}°`);}
+      else if((cmd==='A'||cmd==='ALT') && i<t.length){let alt=Number(t[i++]);if(!Number.isFinite(alt)||alt<0)return say('Invalid altitude.',true); if(alt<100)alt*=1000; if(!assignAltitude(a,alt))return;readback.push(altitudeReadback(a));}
       else if((cmd==='S'||cmd==='SPD') && i<t.length){
         const speed=Number(t[i++]),limits=profile(a);
         if(!Number.isFinite(speed)||speed<limits.min||speed>limits.max)return say(`${a.callsign} ${a.type}: speed must be ${limits.min}–${limits.max} kt.`,true);
@@ -272,7 +310,7 @@
         readback.push(`speed ${speed} kt`);
       }
       else if((cmd==='R'||cmd==='RWY') && i<t.length){if(!assignRunway(a,t[i++]))return;readback.push(`use runway ${a.runway}`);}
-      else if((cmd==='D'||cmd==='DIRECT') && i<t.length){const f=findFix(t[i++]); if(f){a.nav=f;readback.push(`head direct to ${f.id}`);} else return say('Unknown fix.',true);}
+      else if((cmd==='D'||cmd==='DIRECT') && i<t.length){const f=findFix(t[i++]); if(f){readback.push(assignRoute(a,[f]));} else return say('Unknown fix.',true);}
       else if((cmd==='L'||cmd==='LAND') && i<t.length){const result=clearToLand(a,t[i++]);if(!result)return;readback.push(result);}
       else if(cmd==='T'||cmd==='TO'){if(!takeoff(a))return;readback.push(`cleared for takeoff runway ${a.runway}`);}
       else if(cmd==='G'||cmd==='GA'){const result=goAround(a);if(!result)return;readback.push(result);}
@@ -340,12 +378,12 @@
       state.upcoming.shift();state.lastSpawn=state.trafficElapsed;
       pending=state.upcoming[0];
     }
-    if(traffic.waves){
+    if(traffic.waves&&traffic.waves.enabled!==false){
       const index=Math.max(0,Math.floor((state.trafficElapsed-traffic.buildup_seconds)/traffic.waves.interval_seconds)-1);
       for(let i=index;i<=index+1;i++){
         const at=waveTime(i);
         if(previousTrafficTime<at&&state.trafficElapsed>=at&&trafficPattern(timeOfDaySeconds()).density>0){
-          const kinds=[...Array(2+Math.floor(Math.random()*2)).fill('arrival'),...Array(1+Math.floor(Math.random()*2)).fill('departure')];
+          const kinds=[...Array(traffic.waves.arrivals??2).fill('arrival'),...Array(traffic.waves.departures??1).fill('departure')];
           // Shuffle the mix and stagger activations, each with a full advance notice.
           for(let j=kinds.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[kinds[j],kinds[k]]=[kinds[k],kinds[j]];}
           let due=Math.max(state.trafficElapsed+TRAFFIC_NOTICE_SECONDS,...state.upcoming.map(f=>f.dueAt+traffic.waves.spacing_seconds));
@@ -387,19 +425,19 @@
         const dx=(a.nav.x-a.x)*sector.width,dy=(a.nav.y-a.y)*sector.height;
         a.targetHeading=normalizeHeading(Math.atan2(dx,-dy)*180/Math.PI);
         if(distance(a,a.nav)<1.2){
-          if(!(a.kind==='departure'&&a.nav.id===a.exitFix&&a.altitude>=4000))pilotReport(a,'fix',a.nav.id);
-          a.nav=null;
+          if(!(a.kind==='departure'&&a.nav.id===a.exitFix&&a.altitude>=handoffAltitude))pilotReport(a,'fix',a.nav.id);
+          a.nav=a.route?.length?findFix(a.route.shift()):null;
         }
       }
       updateApproach(a);
       updateTurn(a,dt);
       const altDelta=a.targetAltitude-a.altitude; const climb=Math.sign(altDelta)*Math.min(Math.abs(altDelta),1600*dt/60);
-      if(a.phase!=='takeoff'||a.speed>profile(a).min)a.altitude=Math.max(0,a.altitude+climb);
+      if(a.phase!=='takeoff'||a.speed>profile(a).min)a.altitude=Math.max(groundAltitude(a),a.altitude+climb);
       // Airborne clearances change speed gradually; runway acceleration is faster.
       const speedChangeRate=a.phase==='takeoff'?3:0.6; // kt per simulation second
       const spdDelta=a.targetSpeed-a.speed; a.speed+=Math.sign(spdDelta)*Math.min(Math.abs(spdDelta),speedChangeRate*dt);
 
-      if(a.phase==='takeoff' && a.speed>profile(a).min){a.altitude=Math.max(a.altitude,50); a.phase='airborne';}
+      if(a.phase==='takeoff' && a.speed>profile(a).min){a.altitude=Math.max(a.altitude,groundAltitude(a)+50); a.phase='airborne';}
       if(a.phase!=='holding'){
         const nmPerSec=a.speed/3600;
         const rad=a.heading*Math.PI/180;
@@ -418,18 +456,18 @@
         // Stop targeting the approach before turning back toward a passed threshold.
         if(a.approachCaptured && ahead<=0)a.targetHeading=rw.heading;
         const inTouchdownArea=ahead<0.12 && ahead>-(runwayLength-0.1);
-        if(a.approachCaptured && inTouchdownArea && Math.abs(crossTrack)<0.1 && aligned && a.altitude<100){
+        if(a.approachCaptured && inTouchdownArea && Math.abs(crossTrack)<0.1 && aligned && a.altitude<rw.elevation+100){
           if(ahead>0){a.x=threshold.x;a.y=threshold.y;}
-          a.altitude=0;a.speed=90;a.targetSpeed=0;a.phase='landed';a.landed=true;
+          a.altitude=rw.elevation;a.targetAltitude=rw.elevation;a.speed=90;a.targetSpeed=0;a.phase='landed';a.landed=true;
           state.landings++;state.score+=100;removeAircraft(a,2.5);say(`${a.callsign}: landed runway ${rw.id}.`);
         }
         else if(a.approachCaptured && ahead<=-(runwayLength-0.1)){
-          a.clearedToLand=null;a.approachCaptured=false;a.targetAltitude=3000;
+          a.clearedToLand=null;a.approachCaptured=false;a.targetAltitude=goAroundAltitude;
           a.targetSpeed=Math.max(190,a.targetSpeed);a.targetHeading=rw.heading;
-          say(`${a.callsign}: unable to complete landing on ${rw.id}, going around to 3,000 ft.`,true);
+          say(`${a.callsign}: unable to complete landing on ${rw.id}, going around to ${goAroundAltitude.toLocaleString('en-GB')} ft.`,true);
         }
       }
-      if(a.kind==='departure' && a.phase==='airborne' && a.altitude>=4000){ const f=findFix(a.exitFix); if(distance(a,f)<1.3){state.handoffs++;state.score+=80;pilotReport(a,'handoff',f.id);removeAircraft(a);}}
+      if(a.kind==='departure' && a.phase==='airborne' && a.altitude>=handoffAltitude && !a.route?.length && (!a.nav||a.nav.id===a.exitFix)){ const f=findFix(a.exitFix); if(distance(a,f)<1.3){state.handoffs++;state.score+=80;pilotReport(a,'handoff',f.id);removeAircraft(a);}}
       if(a.x<-.08||a.x>1.08||a.y<-.08||a.y>1.08){ if(a.kind==='arrival'){state.missed++;state.score-=100;} removeAircraft(a); }
     }
     checkSeparation();
@@ -444,7 +482,7 @@
     if(arrival.kind!=='arrival'||departure.kind!=='departure')return false;
     // Separate parallel runway operations include ground roll and the low,
     // aligned initial climb, not a general exemption for nearby aircraft.
-    if(!['takeoff','airborne'].includes(departure.phase)||departure.altitude>1000||!arrival.approachCaptured||!arrival.clearedToLand)return false;
+    if(!['takeoff','airborne'].includes(departure.phase)||departure.altitude-groundAltitude(departure)>1000||!arrival.approachCaptured||!arrival.clearedToLand)return false;
     const landingRunway=runways.find(r=>r.id===arrival.clearedToLand);
     const takeoffRunway=runways.find(r=>r.id===departure.runway);
     if(!landingRunway||!takeoffRunway||landingRunway.heading!==takeoffRunway.heading)return false;
@@ -452,7 +490,7 @@
     if(samePhysicalRunway)return false;
     const landing=runwayPosition(arrival,landingRunway),takeoff=runwayPosition(departure,takeoffRunway);
     const length=distance({x:takeoffRunway.x1,y:takeoffRunway.y1},{x:takeoffRunway.x2,y:takeoffRunway.y2});
-    return arrival.altitude<=1000 && landing.ahead>=0 && landing.ahead<=3 &&
+    return arrival.altitude-groundAltitude(arrival)<=1000 && landing.ahead>=0 && landing.ahead<=3 &&
       Math.abs(landing.cross)<0.1 && Math.abs(turnDelta(arrival.heading,landingRunway.heading))<10 &&
       takeoff.ahead<=0.05 && takeoff.ahead>=-(length+3) && Math.abs(takeoff.cross)<0.1 &&
       Math.abs(turnDelta(departure.heading,takeoffRunway.heading))<10;
@@ -514,7 +552,7 @@
   }
 
   function draw(){
-    ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#203f4c';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=definition.background.style==='desert'?'#454b43':'#203f4c';ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.setTransform(mapView.scale,0,0,mapView.scale,mapView.left,mapView.top);
     const w=mapWidth,h=mapHeight;
     drawGeography();
@@ -553,8 +591,13 @@
       ctx.save();ctx.translate(cx,cy);ctx.rotate((r.heading-90)*Math.PI/180);
       ctx.strokeStyle='#dae7ee';ctx.lineWidth=2.5/mapView.scale;
       ctx.beginPath();ctx.moveTo(-halfLength,0);ctx.lineTo(halfLength,0);ctx.stroke();
-      ctx.fillStyle='#c0d2dd';ctx.textAlign='right';ctx.fillText(r.ends[0],-halfLength-5/mapView.scale,labelY);
-      ctx.textAlign='left';ctx.fillText(r.ends[1],halfLength+5/mapView.scale,labelY);ctx.restore();ctx.textAlign='center';
+      ctx.restore();
+      // Keep identifiers horizontal even when the airport's runways are angled.
+      const angle=(r.heading-90)*Math.PI/180,along=halfLength+12/mapView.scale;
+      ctx.fillStyle='#c0d2dd';ctx.textAlign='center';
+      for(const [end,sign] of [[r.ends[0],-1],[r.ends[1],1]]){
+        ctx.fillText(end,cx+sign*along*Math.cos(angle)-labelY*Math.sin(angle),cy+sign*along*Math.sin(angle)+labelY*Math.cos(angle));
+      }
     }
     ctx.lineWidth=1;
     drawCompass();
@@ -584,6 +627,10 @@
       const airportDistance=document.createElement('div');airportDistance.className='strip-bottom';
       airportDistance.textContent=`${distance(a,airport).toFixed(1)} NM from ${definition.short_name}`;
       d.appendChild(airportDistance);
+      if(a.nav){
+        const route=document.createElement('div');route.className='strip-bottom';
+        route.textContent='ROUTE '+[a.nav.id,...(a.route||[])].join(' → ');d.appendChild(route);
+      }
       if(a.kind==='arrival'&&a.clearedToLand){
         const status=document.createElement('div');status.className='strip-bottom';
         status.textContent=`RWY ${a.clearedToLand} · ${a.approachCaptured?'FINAL':'AWAITING INTERCEPT'}`;d.appendChild(status);
@@ -612,7 +659,12 @@
   function resize(){
     const r=canvas.parentElement.getBoundingClientRect();canvas.width=Math.max(1,Math.floor(r.width));canvas.height=Math.max(1,Math.floor(r.height));
     const zoom=MAP_ZOOM;
-    const scale=Math.min(canvas.width/mapWidth,canvas.height/mapHeight)*zoom;
+    // Viewing dimensions are independent of sector bounds. Airports can use
+    // the same NM-to-pixel magnification without changing their geography.
+    const viewWidth=definition.display.view_width_nm??sector.width;
+    const viewHeight=definition.display.view_height_nm??sector.height;
+    const pixelsPerNm=Math.min(canvas.width/viewWidth,canvas.height/viewHeight)*zoom;
+    const scale=pixelsPerNm*sector.width/mapWidth;
     mapView={scale,left:(canvas.width-mapWidth*scale)/2,top:(canvas.height-mapHeight*scale)/2};
   }
   window.addEventListener('resize',resize);

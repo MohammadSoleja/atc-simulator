@@ -11,7 +11,7 @@
 <body>
 <div class="app-shell">
   <header class="topbar">
-    <div><span class="brand">ATC SIMULATOR</span><span class="sector">{{ airport.code }} APPROACH</span></div>
+    <div><span class="brand">ATC SIMULATOR</span><span class="sector">{{ airport.code }} APPROACH{% if airport.preview %} · PLAYTEST{% endif %}</span></div>
     <div class="top-stats">
       <span>TIME <b id="clock">{{ start_time }}</b></span>
       <div class="speed-buttons" role="group" aria-label="Simulation speed">
@@ -57,7 +57,7 @@
     <div id="message" class="message">System ready. Select an aircraft or type a command.</div>
     <form id="commandForm" autocomplete="off">
 
-      <input aria-label="ATC command" id="commandInput" autofocus spellcheck="false" placeholder="BAW123 C 3 C 270 S 180">
+      <input aria-label="ATC command" id="commandInput" autofocus spellcheck="false" placeholder="BAW123 C {{ example_altitude }} C {{ airport.wind.heading }} S 180">
       <button type="submit">Go</button>
       <button id="voiceBtn" type="button" aria-pressed="false" title="Hold Q or hold this button to speak">Hold Q · Mic</button>
     </form>
@@ -105,30 +105,31 @@
         <h3>Commands</h3>
         <p><code>BAW123 C 270</code> heading</p>
         <p><code>BAW123 C 010</code> heading 10°</p>
-        <p><code>BAW123 C 3</code> altitude 3,000 ft</p>
+        <p><code>BAW123 C {{ example_altitude }}</code> altitude {{ example_altitude }},000 ft</p>
         <p><code>BAW123 C 4000</code> altitude in feet</p>
         <p><code>BAW123 S 180</code> speed</p>
-        <p><code>BAW123 C CPT</code> direct fix</p>
+        <p><code>BAW123 C {{ example_fix }}</code> direct fix</p>
         <p><code>BAW123 L {{ example_runway }}</code> land</p>
         <p>Runways: {% for runway in airport.runways %}{{ runway.ends.0 }} / {{ runway.ends.1 }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
         <p><code>BAW123 T</code> takeoff</p>
-        <p><code>BAW123 C 5 R {{ example_runway }} T</code> departure</p>
+        <p><code>BAW123 C {{ departure_altitude }} R {{ example_runway }} T</code> departure</p>
         <p><code>R {{ example_runway }}</code> assigns a runway before takeoff.</p>
         <p>△ RNAV fix · ○ radio aid · ◎ NDB</p>
         <p><code>BAW123 G</code> go around</p>
         <p>1–2 digits: altitude × 1,000 ft.<br>001–360: heading. Above 360: feet.</p>
-        <p><code>BAW123 C 3 C 270 S 180</code></p>
+        <p><code>BAW123 C {{ example_altitude }} C {{ airport.wind.heading }} S 180</code></p>
       </section>
-  <p>Select an aircraft to fill in its callsign. Commands can be chained.</p>
-  <p>Voice: hold Q or the Mic button and speak a callsign followed by instructions. Live speech appears in the command box; release to translate, then check and press Enter. Example: “Speedbird one two three, descend and maintain three thousand, reduce speed to one eight zero, heading two seven zero.” Airline names, spelled letters and phonetic letters are supported. Use “direct Whiskey Oscar Delta” for WOD. Microphone permission is required; your browser may send audio to its speech recognition service. Voice support depends on the browser.</p>
+  <p>Select an aircraft to fill in its callsign. Commands can be chained. Consecutive waypoint clearances, such as <code>CALLSIGN C FIX1 C FIX2</code>, fly those fixes in order. A later <code>CALLSIGN C FIX3</code> replaces the whole route. Heading vectors, landing clearances and go-arounds clear the queued route. The current route appears on the flight strip.</p>
+  <p>Voice: hold Q or the Mic button and speak a callsign followed by instructions. Live speech appears in the command box; release to translate, then check and press Enter. Example: “Speedbird one two three, speed one eight zero, heading {{ airport.wind.heading }}.” Airline names, spelled letters and phonetic letters are supported. Direct instructions use any named fix shown on the selected map. Microphone permission is required; your browser may send audio to its speech recognition service. Voice support depends on the browser.</p>
   <p>Live transcription appears in the command box; release Q to review the command draft. Download voice log exports transcripts, alternatives and errors from this tab. Translation errors stay inline and identify the affected instruction. Edit the command box or record again, then check the draft before pressing Enter/Go. Translation does not mean the simulation has accepted a clearance.</p>
-  <p>Normal (2×) is the default gameplay pace. The clock shows airport time from 06:00 and advances two minutes per real minute at Normal; 1× halves that rate, 4× doubles it, 8× quadruples it. Pause and Help stop both clock and aircraft.</p>
+  <p>Normal (2×) is the default gameplay pace. The clock shows airport time from {{ start_time }} and advances two minutes per real minute at Normal; 1× halves that rate, 4× doubles it, 8× quadruples it. Pause and Help stop both clock and aircraft.</p>
   <p>Dashed flight strips preview scheduled traffic {{ airport.traffic.notice_seconds }} seconds before activation (at Normal). Countdown pauses with the game and scales with speed. Departures are blue on radar; arrivals are white. Amber marks selection and red marks conflicts.</p>
   <p>{{ airport.traffic.description }}</p>
-  <p>Landing: heading within 60° of the runway direction, altitude at or below 3,000 ft. Vector onto the dashed extended centreline before the threshold; clearance alone does not turn the aircraft toward the runway. A late or non-intersecting clearance can miss the approach.</p>
+  <p>Landing: heading within 60° of the runway direction, height at or below 3,000 ft above the selected runway. {% if airport.elevation_ft %}Airport elevation is {{ airport.elevation_ft }} ft; use altitude 5,000 ft to set up an approach here. Headings use the north-up geographic map (runway 15: 150°, runway 33: 330°).{% endif %} Vector onto the dashed extended centreline before the threshold; clearance alone does not turn the aircraft toward the runway. A late or non-intersecting clearance can miss the approach.</p>
+  {% if airport.code == 'OERK' %}<p>Riyadh approach examples: reach RK538 at 5,000 ft / 180 kt, then use <code>H 300 L 33L</code> or <code>H 300 L 33R</code> to intercept from the southeast. For the opposite direction, reach RK734 and use <code>H 120 L 15L</code> or <code>H 120 L 15R</code>. Turn onto that heading before issuing landing clearance. These are simplified game vectors, not published procedures.</p>{% endif %}
   <p>Radar labels: altitude in hundreds of feet, ↑ climb / ↓ descent / = level, speed in tens of knots. Flight strips show full values.</p>
   <p>Maintain 3 NM lateral or 1,000 ft vertical separation. Departures need altitude and runway assignments before takeoff.</p>
-  <p>Departure handoff: fly to the requested FIX shown on the strip at 4,000 ft or above. Reaching within 1.3 NM completes the handoff and earns 80 points. Takeoff alone does not count as a successful departure.</p>
+  <p>Departure handoff: fly to the requested FIX shown on the strip at {{ handoff_altitude }} ft or above. Reaching within 1.3 NM completes the handoff and earns 80 points. Takeoff alone does not count as a successful departure.</p>
   <p class="map-credit">{{ airport.background.attribution }}</p>
 </dialog>
 <dialog id="infoDialog" class="help-dialog info-dialog" aria-labelledby="infoTitle">
@@ -141,10 +142,10 @@
 <script src="{% static 'simulator/js/airlines.js' %}"></script>
 {{ airport|json_script:'airportDefinition' }}
 <script src="{% static airport.background.asset %}"></script>
-<script src="{% static 'simulator/js/airport.js' %}"></script>
+<script src="{% static 'simulator/js/airport.js' %}?v=queued-routes-6"></script>
 <script src="{% static 'simulator/js/readbacks.js' %}"></script>
 <script src="{% static 'simulator/js/save-format.js' %}"></script>
-<script src="{% static 'simulator/js/game.js' %}"></script>
+<script src="{% static 'simulator/js/game.js' %}?v=queued-routes-6"></script>
 {% if user.is_authenticated %}
 <form id="saveCsrf" hidden>{% csrf_token %}</form>
 <div id="saveConfig" hidden data-create-url="{% url 'save_game' %}" {% if save_id %}data-load-url="{% url 'load_game' save_id %}"{% endif %}></div>

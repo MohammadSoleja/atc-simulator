@@ -47,9 +47,9 @@
         <form action="{% url 'index' %}" method="get" class="map-selection">
           <label for="mapSelect">Choose your map</label>
           <select id="mapSelect" name="map">
-            {% for map in maps %}<option value="{{ map.id }}">{{ map.name }} ({{ map.code }})</option>{% endfor %}
+            {% for map in maps %}<option value="{{ map.id }}">{{ map.name }} ({{ map.code }}){% if map.preview %} — Playtest{% endif %}</option>{% endfor %}
           </select>
-          <p class="map-note">{{ maps|length }} playable map{{ maps|length|pluralize }}. More airports will follow.</p>
+          <p class="map-note">{{ maps|length }} playable map{{ maps|length|pluralize }}. More airports will follow. {% for map in maps %}{% if map.preview %}{{ map.short_name }} is a local playtest preview awaiting approval.{% endif %}{% endfor %}</p>
           <button class="start-button" type="submit">Start game <span aria-hidden="true">→</span></button>
         </form>
         <p class="session-note">Starts a new session. No account required.</p>

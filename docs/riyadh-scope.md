@@ -1,8 +1,9 @@
 # Riyadh map scope (M03)
 
 Status: airport and initial scope approved by the product owner in chat on
-16 October 2026. This document completes scope/research; it does not introduce
-a playable Riyadh map. M04–M06 implement and playtest it before selection.
+16 October 2026. M04–M06 now provide a local playable preview; owner approval is pending.
+See [riyadh-playtest.md](riyadh-playtest.md) for current sources, controls,
+verification and the remaining acceptance checklist.
 
 ## Approved initial scope
 
@@ -20,9 +21,9 @@ vectoring destinations without implementing SID/STAR procedures.
 
 ## Geographic baseline and usable sources
 
-The SANS publication effective 6 August 2026 is an inspected baseline, not a
-claim of the latest operational cycle. Recheck the effective AIP and relevant
-supplements at M04/M05 before transcribing final data.
+The following August material records the M03 research baseline. Implementation
+was rechecked against AIRAC 10/26, effective 1 October 2026; source URLs and
+verification are recorded in the playtest document and airport definition.
 
 [OERK AD 2](https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2008_26_2026_08_06/eAIP/AD%202%20OERK%20RIYADH%20-%20KING%20KHALED%20INTERNATIONAL-en-GB.html)
 gives the reference point N245746 E0464229 and elevation 2,053 ft. AD 2.12 lists

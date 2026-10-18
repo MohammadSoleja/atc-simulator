@@ -1,0 +1,354 @@
+{
+  "version": 1,
+  "id": "oerk",
+  "code": "OERK",
+  "name": "Riyadh King Khalid",
+  "short_name": "Riyadh",
+  "preview": true,
+  "elevation_ft": 2053,
+  "sector": {
+    "width": 100,
+    "height": 100,
+    "latitude": 24.962777777777777,
+    "longitude": 46.70805555555556
+  },
+  "display": {
+    "width": 1000,
+    "height": 1000,
+    "zoom": 1.4,
+    "approach_range_nm": 25,
+    "view_width_nm": 100,
+    "view_height_nm": 70
+  },
+  "wind": {
+    "heading": 330,
+    "speed": 10
+  },
+  "runways": [
+    {
+      "ends": [
+        "15L",
+        "33R"
+      ],
+      "headings": [
+        150,
+        330
+      ],
+      "start": [
+        "245836.69N",
+        "0464207.25E"
+      ],
+      "end": [
+        "245638.30N",
+        "0464322.12E"
+      ],
+      "threshold_elevations_ft": [
+        2036.8,
+        2015.8
+      ]
+    },
+    {
+      "ends": [
+        "15R",
+        "33L"
+      ],
+      "headings": [
+        150,
+        330
+      ],
+      "start": [
+        "245815.40N",
+        "0464029.60E"
+      ],
+      "end": [
+        "245616.99N",
+        "0464144.51E"
+      ],
+      "threshold_elevations_ft": [
+        2052.8,
+        2036.7
+      ]
+    }
+  ],
+  "fixes": [
+    {
+      "id": "KSA",
+      "kind": "VOR/DME",
+      "latitude": "245849.2N",
+      "longitude": "0464008.1E",
+      "label_offset": [
+        -20,
+        -12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/eAIP/AD%202%20OERK%20RIYADH%20-%20KING%20KHALED%20INTERNATIONAL-en-US.html"
+    },
+    {
+      "id": "LOTER",
+      "kind": "RNAV",
+      "latitude": "253720N",
+      "longitude": "0460036E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/eAIP/ENR%204.4-en-US.html",
+      "position_offset_nm": {
+        "east": 3.970682,
+        "north": -19.566667
+      },
+      "gameplay_note": "Adjusted inside the default view for visible routing and sequencing."
+    },
+    {
+      "id": "NOSGI",
+      "kind": "RNAV",
+      "latitude": "250426N",
+      "longitude": "0472553E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/eAIP/ENR%204.4-en-US.html"
+    },
+    {
+      "id": "REXOV",
+      "kind": "RNAV",
+      "latitude": "253710N",
+      "longitude": "0473043E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2015L-15R%20%28aeronautical%20data%20tabulation%29%204.pdf",
+      "position_offset_nm": {
+        "east": -8.727479,
+        "north": -19.4
+      },
+      "gameplay_note": "Adjusted inside the default view for visible routing and sequencing."
+    },
+    {
+      "id": "MEPTU",
+      "kind": "RNAV",
+      "latitude": "252341N",
+      "longitude": "0464403E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2015L-15R%20%28aeronautical%20data%20tabulation%29%204.pdf",
+      "position_offset_nm": {
+        "east": 0,
+        "north": -6
+      },
+      "gameplay_note": "Moved 6 NM south from the published position to fit the default view."
+    },
+    {
+      "id": "SISIR",
+      "kind": "RNAV",
+      "latitude": "251131N",
+      "longitude": "0465145E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2015L-15R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "id": "RK734",
+      "kind": "RNAV",
+      "latitude": "252846N",
+      "longitude": "0462258E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2015L-15R%20%28aeronautical%20data%20tabulation%29%204.pdf",
+      "position_offset_nm": {
+        "east": -0.306538,
+        "north": -9.0
+      },
+      "gameplay_note": "Adjusted inside the default view for visible routing and sequencing."
+    },
+    {
+      "id": "RK507",
+      "kind": "RNAV",
+      "latitude": "244339N",
+      "longitude": "0460843E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "id": "ORLUD",
+      "kind": "RNAV",
+      "latitude": "244400N",
+      "longitude": "0462405E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "id": "RK538",
+      "kind": "RNAV",
+      "latitude": "242340N",
+      "longitude": "0470215E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf",
+      "position_offset_nm": {
+        "east": 0.079893,
+        "north": 14.1
+      },
+      "gameplay_note": "Adjusted inside the default view for visible routing and sequencing."
+    },
+    {
+      "id": "RK532",
+      "kind": "RNAV",
+      "latitude": "241845N",
+      "longitude": "0462606E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf",
+      "position_offset_nm": {
+        "east": -0.147162,
+        "north": 18.516667
+      },
+      "gameplay_note": "Adjusted inside the default view for visible routing and sequencing."
+    },
+    {
+      "id": "KIRUL",
+      "kind": "RNAV",
+      "latitude": "250921N",
+      "longitude": "0462550E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "id": "RK762",
+      "kind": "RNAV",
+      "latitude": "251406N",
+      "longitude": "0464113E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2015L-15R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "id": "RK783",
+      "kind": "RNAV",
+      "latitude": "250526N",
+      "longitude": "0465536E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2015L-15R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "id": "RK579",
+      "kind": "RNAV",
+      "latitude": "245107N",
+      "longitude": "0463725E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "id": "RK565",
+      "kind": "RNAV",
+      "latitude": "243857N",
+      "longitude": "0464505E",
+      "label_offset": [
+        0,
+        12
+      ],
+      "source": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    }
+  ],
+  "departure_fixes": [
+    "LOTER",
+    "NOSGI",
+    "REXOV",
+    "RK734",
+    "RK507",
+    "RK538",
+    "RK532"
+  ],
+  "traffic": {
+    "start_seconds": 28800,
+    "interval_seconds": 30,
+    "notice_seconds": 30,
+    "buildup_seconds": 300,
+    "initial_arrivals": 1,
+    "arrival_interval_seconds": 45,
+    "arrival_altitude_hundreds": [
+      85,
+      120
+    ],
+    "arrival_speed": [
+      220,
+      270
+    ],
+    "arrival_target_speed": 220,
+    "patterns": [
+      {
+        "until_minute": 1440,
+        "density": 1,
+        "arrival_share": 0.5
+      }
+    ],
+    "description": "Riyadh playtest traffic: one initial arrival, five-minute buildup, then independent 45-second arrivals and roughly 60-second departures at Normal. Additional waves are temporarily disabled. Balanced all-day gameplay; not a reproduction of airline schedules.",
+    "waves": {
+      "enabled": false,
+      "interval_seconds": 450,
+      "jitter_seconds": 150,
+      "spacing_seconds": 20,
+      "arrivals": 2,
+      "departures": 1
+    }
+  },
+  "background": {
+    "asset": "simulator/js/map-oerk.js",
+    "style": "desert",
+    "attribution": "Urban context: Natural Earth v5.1.2 (public domain). Runways and fixes: Saudi AIP 10/26, effective 1 October 2026. Original desert styling; no terrain or procedure simulation. MEPTU, LOTER, REXOV, RK734, RK538 and RK532 have documented gameplay position adjustments.",
+    "sources": [
+      {
+        "name": "Natural Earth v5.1.2 urban areas (1:10m)",
+        "url": "https://github.com/nvkelso/natural-earth-vector/blob/v5.1.2/geojson/ne_10m_urban_areas.geojson",
+        "licence": "Public domain",
+        "licence_url": "https://www.naturalearthdata.com/about/terms-of-use/"
+      }
+    ]
+  },
+  "aeronautical_sources": [
+    {
+      "name": "Saudi AIP 10/26 OERK AD 2: ARP, elevation, runways, KSA DVOR/DME",
+      "url": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/eAIP/AD%202%20OERK%20RIYADH%20-%20KING%20KHALED%20INTERNATIONAL-en-US.html"
+    },
+    {
+      "name": "Saudi AIP 10/26 ENR 4.4: LOTER and NOSGI",
+      "url": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/eAIP/ENR%204.4-en-US.html"
+    },
+    {
+      "name": "Saudi AIP 10/26 AD 2 OERK-93: north waypoint list",
+      "url": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2015L-15R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    },
+    {
+      "name": "Saudi AIP 10/26 AD 2 OERK-105: south waypoint list",
+      "url": "https://aimss.sans.com.sa/assets/FileManagerFiles/AIRAC%20AIP%20AMDT%2010_26_2026_10_01/documents/Root_WePub/Sans_Rep/Charts/AD%202/AD%202%20OERK/STAR%20RNAV%20RWY%2033L-33R%20%28aeronautical%20data%20tabulation%29%204.pdf"
+    }
+  ]
+}
