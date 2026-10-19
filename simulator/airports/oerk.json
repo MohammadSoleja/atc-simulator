@@ -293,7 +293,7 @@
     "notice_seconds": 30,
     "buildup_seconds": 300,
     "initial_arrivals": 1,
-    "arrival_interval_seconds": 45,
+    "arrival_interval_seconds": 60,
     "arrival_altitude_hundreds": [
       85,
       120
@@ -310,7 +310,7 @@
         "arrival_share": 0.5
       }
     ],
-    "description": "Riyadh playtest traffic: one initial arrival, five-minute buildup, then independent 45-second arrivals and roughly 60-second departures at Normal. Additional waves are temporarily disabled. Balanced all-day gameplay; not a reproduction of airline schedules.",
+    "description": "Riyadh playtest traffic: one initial arrival, five-minute buildup, then independent 60-second arrivals and roughly 60-second departures at Normal. Additional waves are temporarily disabled. Balanced all-day gameplay; not a reproduction of airline schedules.",
     "waves": {
       "enabled": false,
       "interval_seconds": 450,

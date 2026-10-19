@@ -54,12 +54,12 @@ These staging fixes give room to intercept the extended centreline and descend.
 They are game vectors, not SID/STAR implementations or real-world instructions.
 
 Traffic starts at 08:00 with one arrival, builds for five Normal playing minutes,
-then offers arrivals every 45 Normal seconds and departures about every 60.
+then offers arrivals every 60 Normal seconds and departures about every 60.
 Both streams have 30-second advance notices, pause/resume and speed scaling. This is a
 balanced, all-day gameplay mix, not a claim about actual Riyadh airline banks.
 Waves are temporarily disabled on both maps. Retained settings are two arrivals
 and one departure, staggered 20 seconds apart, for later retuning.
-Heathrow also uses 45-second regular arrivals; its zero-ground model remains intact.
+Heathrow also uses 60-second regular arrivals; its zero-ground model remains intact.
 
 ## Source verification and asset provenance
 

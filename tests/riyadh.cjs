@@ -68,7 +68,7 @@ for(const [arrId,depId] of [['33L','33R'],['15L','15R']]){
   for(const a of state.aircraft)if(!seen.has(a.callsign)){seen.add(a.callsign);counts[a.kind]++;}
   state.aircraft=[];
  }
- assert.ok(counts.arrival===6,'45-second mature arrivals');
+ assert.ok(counts.arrival===5,'60-second mature arrivals');
  assert.ok(counts.departure>=4&&counts.departure<=5,'60-second mature departures');
  state.paused=true;const elapsed=state.trafficElapsed;engine.update(0,100);assert.equal(state.trafficElapsed,elapsed);
 }

@@ -27,7 +27,7 @@ No external map API, new frontend framework or database table is introduced.
   end exclusively at `until_minute`, increasing through minute 1440. Arrival
   altitude ranges retain the existing engine's hundreds-of-feet unit.
   Optional `arrival_interval_seconds` enables an independent arrival stream;
-  departures retain their time-of-day rate. Both airports currently use 45 seconds after buildup.
+  departures retain their time-of-day rate. Both airports currently use 60 seconds throughout.
   Stream reservations are stored in optional version-1 `trafficSchedule` fields;
   older saves initialise these from their existing pending flights.
 - `background`: bundled asset path, attribution and dataset/licence links.

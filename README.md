@@ -214,8 +214,7 @@ Normal aircraft dynamics now run 20% faster, uniformly scaling movement, turns,
 altitude and speed changes; indicated speeds and aircraft envelopes are unchanged.
 The airport clock advances two minutes per real minute at Normal. Automatic traffic has a 30-second
 base interval for the mixed scheduler. Both airports currently use independent
-arrival streams that build down from roughly 60 to 45 Normal real seconds during
-the first five minutes. Departures retain their time-of-day cadence (roughly
+arrival streams that build down from roughly 60 Normal real seconds throughout the session. Departures retain their time-of-day cadence (roughly
 60 seconds during daytime mixed traffic). Traffic is uncapped. Waves are temporarily disabled on both airports. Their two-arrival/one-departure
 settings are retained for later retuning. Existing queued
 flights in saves retain their promised activation times. New arrivals use the
@@ -457,3 +456,15 @@ Run `node tests/arrival-traffic.cjs` for independent-stream timing, overlapping
 Riyadh checks: `node tests/riyadh.cjs` and
 `python manage.py test simulator.test_riyadh`. Heathrow regressions remain in
 the existing JavaScript and Django suites.
+
+### Queued waypoint clearances
+
+On every map, consecutive waypoint clauses in one submission form a route:
+`CALLSIGN C FIX1 C FIX2`. The aircraft flies FIX1 and then FIX2, with the route
+shown on its strip. A later `CALLSIGN C FIX3` replaces the complete route.
+`D` / `DIRECT` waypoint clauses work the same way. Heading vectors, landing
+clearances and go-arounds clear navigation; speed and altitude instructions
+preserve it. Speed/altitude/heading clauses end a consecutive waypoint group,
+so put the intended waypoint sequence together. Up to 20 fixes are supported.
+Queued routes survive save/load, and older saves without routes remain valid.
+Run `node tests/routes.cjs` for ordered passage, replacement and save checks.

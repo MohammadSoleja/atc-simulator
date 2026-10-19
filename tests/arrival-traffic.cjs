@@ -12,7 +12,7 @@ function setup(waves=false){
  return result;
 }
 function step(engine,seconds=1){engine.update(0,seconds*2);engine.cleanup();}
-// Independent streams: roughly 1.3 arrivals/minute and one departure/minute at midday,
+// Independent streams: one arrival/minute and one departure/minute at midday,
 // with overlapping full notices. No aircraft are cleared to free spawning slots.
 {
  const {engine,element,context}=setup();const s=engine.getState();engine.update(0,0);
@@ -29,11 +29,11 @@ function step(engine,seconds=1){engine.update(0,seconds*2);engine.cleanup();}
    (a.kind==='arrival'?arrivals:departures).push(s.trafficElapsed);
   }
  }
- assert.ok(arrivals.length===6);
+ assert.ok(arrivals.length===5);
  assert.ok(departures.length>=4&&departures.length<=5);
- for(let i=1;i<arrivals.length;i++)assert.equal(arrivals[i]-arrivals[i-1],45);
+ for(let i=1;i<arrivals.length;i++)assert.equal(arrivals[i]-arrivals[i-1],60);
  for(let i=1;i<departures.length;i++)assert.equal(departures[i]-departures[i-1],60);
- assert.ok(s.upcoming.filter(f=>f.kind==='arrival').length>=1,'arrival previews continue');
+ assert.ok(s.upcoming.filter(f=>f.kind==='arrival').length<=1,'60-second arrivals need at most one advance preview');
  const snapshot=clone(context.window.ATCGame.exportSnapshot());
  context.window.ATCGame.restoreSnapshot(snapshot);
  assert.deepEqual(clone(context.window.ATCGame.exportSnapshot()),snapshot,'both stream timers survive save/restore');
@@ -56,11 +56,11 @@ function step(engine,seconds=1){engine.update(0,seconds*2);engine.cleanup();}
 }
 // Faster game paces reserve the same traffic after equivalent simulated time.
 for(const pace of [1,2,4,8]){
- const {engine}=setup();engine.setSimulationRate(pace);engine.advanceSimulation(92/pace);
- assert.ok(Math.abs(engine.getState().trafficElapsed-346)<1e-6);
+ const {engine}=setup();engine.setSimulationRate(pace);engine.advanceSimulation(122/pace);
+ assert.ok(Math.abs(engine.getState().trafficElapsed-361)<1e-6);
  assert.equal(engine.getState().aircraft.filter(a=>a.kind==='arrival').length,1);
 }
-console.log('PASS: independent 45-second arrivals, unchanged departure cadence, full overlapping notices, wave spacing, save/resume, pause and all paces.');
+console.log('PASS: independent 60-second arrivals, unchanged departure cadence, full overlapping notices, wave spacing, save/resume, pause and all paces.');
 
 // Actual default configs use exactly two arrivals and one departure in each wave, even
 // across wave trigger times and with aircraft neither landed nor cleared.
@@ -84,9 +84,9 @@ for(const airport of ['egll','oerk']){
   assert.ok(s.upcoming.length<=5,'small wave plus existing notices');
  }
  assert.ok(waves>=2,`${airport}: mixed waves enabled`);
- assert.equal(data.traffic.arrival_interval_seconds,45,'regular arrival interval retained');
+ assert.equal(data.traffic.arrival_interval_seconds,60,'regular arrival interval retained');
 }
-console.log('PASS: both production map configurations keep 45-second regular arrivals and fixed 2-arrival/1-departure waves.');
+console.log('PASS: both production map configurations keep 60-second regular arrivals and fixed 2-arrival/1-departure waves.');
 
 for(const airport of ['egll','oerk']){
  const data=JSON.parse(fs.readFileSync(`simulator/airports/${airport}.json`,'utf8'));
@@ -98,6 +98,6 @@ for(const airport of ['egll','oerk']){
   step(engine);for(const a of s.aircraft)counts[a.kind]++;s.aircraft=[];
   assert.ok(s.upcoming.length<=2,'no wave queue');
  }
- assert.equal(counts.arrival,26);assert.equal(counts.departure,20);
+ assert.equal(counts.arrival,20);assert.equal(counts.departure,20);
 }
 console.log('PASS: live Heathrow/Riyadh wave toggles disabled; regular traffic unchanged.');
