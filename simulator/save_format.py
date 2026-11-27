@@ -14,7 +14,7 @@ COUNTERS = {'landings', 'handoffs', 'violations', 'missed', 'nextId'}
 AIRCRAFT_REQUIRED = {'id', 'callsign', 'type', 'kind', 'x', 'y', 'heading', 'targetHeading',
                      'altitude', 'targetAltitude', 'speed', 'targetSpeed', 'verticalSpeed',
                      'trail', 'clearedToLand', 'landed', 'nav', 'phase'}
-AIRCRAFT_OPTIONAL = {'runway', 'exitFix', 'bank', 'approachCaptured', 'removeAt'}
+AIRCRAFT_OPTIONAL = {'runway', 'exitFix', 'bank', 'approachCaptured', 'removeAt', 'route'}
 
 
 def fail(message):
@@ -108,6 +108,11 @@ def validate_snapshot(snapshot):
             number(a['removeAt'], 'removal timer')
         choice(a['phase'], {'holding', 'takeoff', 'airborne', 'landed'}, 'aircraft phase')
         choice(a['nav'], fixes, 'navigation fix', nullable=True)
+        if 'route' in a:
+            if not isinstance(a['route'], list) or len(a['route']) > 19 or (a['route'] and a['nav'] is None):
+                fail('Invalid queued route.')
+            for fix in a['route']:
+                choice(fix, fixes, 'queued navigation fix')
         choice(a['clearedToLand'], runways, 'landing runway', nullable=True)
         choice(a.get('runway'), runways, 'departure runway', nullable=True)
         if a['kind'] == 'departure':

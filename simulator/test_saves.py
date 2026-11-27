@@ -75,6 +75,23 @@ class SavedGameTests(TestCase):
         self.assertEqual(response.status_code, 413)
         self.assertEqual(SavedGame.objects.get(pk=saved).snapshot, self.snapshot)
 
+    def test_queued_waypoints_save_load_and_validation(self):
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot['state']['aircraft'][0]['route'] = ['CPT', 'BPK']
+        for autosave in [False, True]:
+            response = self.save_request(autosave=autosave, snapshot=snapshot)
+            self.assertEqual(response.status_code, 200)
+            loaded = self.client.get(reverse('load_game', args=[response.json()['id']]))
+            self.assertEqual(loaded.json()['snapshot'], snapshot)
+        for route in [['MISSING'], ['CPT'] * 20, None, [[]]]:
+            invalid = copy.deepcopy(snapshot)
+            invalid['state']['aircraft'][0]['route'] = route
+            self.assertEqual(self.save_request(autosave=True, snapshot=invalid).status_code, 400)
+        orphaned = copy.deepcopy(snapshot)
+        orphaned['state']['aircraft'][0]['nav'] = None
+        self.assertEqual(self.save_request(snapshot=orphaned).status_code, 400)
+        self.assertEqual(SavedGame.objects.get(is_autosave=True).snapshot, snapshot)
+
     def test_autosave_replaces_only_its_own_slot(self):
         self.save_request()
         first = self.save_request(autosave=True).json()['id']

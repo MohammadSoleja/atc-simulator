@@ -32,6 +32,7 @@
       if (!number(a.verticalSpeed,-10000,10000) || ('bank' in a && !number(a.bank,-30,30))) fail('Invalid aircraft dynamics.');
       if (!['holding','takeoff','airborne','landed'].includes(a.phase) || typeof a.landed !== 'boolean') fail('Invalid aircraft phase.');
       if (a.nav !== null && !context.fixes.includes(a.nav)) fail('Unknown navigation fix.');
+      if('route' in a&&(!Array.isArray(a.route)||a.route.length>19||(a.route.length&&!a.nav)||a.route.some(id=>!context.fixes.includes(id))))fail('Invalid queued route.');
       if (a.clearedToLand !== null && !context.runways.includes(a.clearedToLand)) fail('Unknown landing runway.');
       if (a.runway != null && !context.runways.includes(a.runway)) fail('Unknown departure runway.');
       if (a.kind === 'departure' && (!context.departureFixes.includes(a.exitFix) || (a.phase === 'takeoff' && !a.runway))) fail('Invalid departure route.');

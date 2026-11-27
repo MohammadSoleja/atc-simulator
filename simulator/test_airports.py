@@ -24,8 +24,8 @@ class AirportConfigurationTests(SimpleTestCase):
         self.assertIn('Open Government Licence', airport['background']['sources'][0]['licence'])
 
     def test_only_approved_airports_are_available(self):
-        self.assertEqual(set(MAP_FILES), {'egll'})
-        for identifier in ['oerk', 'egkk', '../egll', '/tmp/egll', '']:
+        self.assertEqual(set(MAP_FILES), {'egll', 'oerk'})
+        for identifier in ['egkk', '../egll', '/tmp/egll', '']:
             self.assertEqual(self.client.get('/play/', {'map': identifier}).status_code, 404)
 
     def test_selection_drives_template_and_serialized_definition(self):
