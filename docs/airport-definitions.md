@@ -86,7 +86,7 @@ palette independently of light/dark interface themes.
 
 `preview: true` gates an unapproved airport to local DEBUG builds, with a
 Playtest label in the selector. Production rejects direct access as well as
-hiding the option. Riyadh uses this gate pending the M06 owner playtest.
+hiding the option. Riyadh completed owner playtesting on 27 November 2026 and no longer uses this gate.
 
 Optional `display.view_width_nm` / `view_height_nm` set the camera's viewing
 reference independently of the sector size. These default to sector dimensions.

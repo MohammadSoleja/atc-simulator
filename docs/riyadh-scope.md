@@ -1,7 +1,7 @@
 # Riyadh map scope (M03)
 
 Status: airport and initial scope approved by the product owner in chat on
-16 October 2026. M04–M06 now provide a local playable preview; owner approval is pending.
+16 October 2026. M04–M06 were accepted after owner playtesting on 27 November 2026; Riyadh is now a regular selectable map.
 See [riyadh-playtest.md](riyadh-playtest.md) for current sources, controls,
 verification and the remaining acceptance checklist.
 

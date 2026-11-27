@@ -4,7 +4,7 @@
   "code": "OERK",
   "name": "Riyadh King Khalid",
   "short_name": "Riyadh",
-  "preview": true,
+  "preview": false,
   "elevation_ft": 2053,
   "sector": {
     "width": 100,
@@ -310,7 +310,7 @@
         "arrival_share": 0.5
       }
     ],
-    "description": "Riyadh playtest traffic: one initial arrival, five-minute buildup, then independent 60-second arrivals and roughly 60-second departures at Normal. Additional waves are temporarily disabled. Balanced all-day gameplay; not a reproduction of airline schedules.",
+    "description": "Riyadh traffic: one initial arrival, five-minute buildup, then independent 60-second arrivals and roughly 60-second departures at Normal. Additional waves are temporarily disabled. Balanced all-day gameplay; not a reproduction of airline schedules.",
     "waves": {
       "enabled": false,
       "interval_seconds": 450,

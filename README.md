@@ -445,8 +445,8 @@ See [airport-definitions.md](docs/airport-definitions.md) for the schema and
 validation. The next airport is **Riyadh (RUH/OERK)**, approved for both runway
 pairs/directions and a 100 × 100 NM sector. Its scoped sources and implementation
 notes are in [riyadh-scope.md](docs/riyadh-scope.md). Riyadh becomes playable in
-M04–M06. A local **Playtest** preview is now available while `DEBUG=True`; it
-is hidden in production until owner approval. See
+M04–M06. Owner playtesting was approved on 27 November 2026; Riyadh is now
+available as a regular map in both local and production settings. See
 [riyadh-playtest.md](docs/riyadh-playtest.md) for commands, elevation handling,
 source provenance and the acceptance checklist.
 

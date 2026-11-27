@@ -1,10 +1,9 @@
 # Riyadh playtest (M04–M06)
 
-Implementation is ready for owner playtesting. M06 approval is still pending.
-In a local DEBUG build, choose **Riyadh King Khalid (OERK) — Playtest** on the
-welcome page, or open `/play/?map=oerk`. Production (`DEBUG=False`) continues to
-hide/reject this preview. Remove `preview: true` from `oerk.json` only after the
-owner approves the map; no second implementation or save migration is needed.
+The product owner approved the map following playtesting on **27 November 2026**.
+M04–M06 implementation and acceptance are complete. Riyadh is a regular map in
+both local and production settings; choose **Riyadh King Khalid (OERK)** on the
+welcome page, or open `/play/?map=oerk`. Existing Riyadh saves remain compatible.
 
 ## Airport and controls
 
@@ -100,12 +99,8 @@ suites. Scenarios cover all runway ends, angled/aligned captures, threshold
 heights, go-arounds, takeoff origins, climb and completed handoffs, separation,
 direct-to/voice vocabulary, restart, background presence and map-specific saves.
 
-Owner playtest still required:
-
-- [ ] Runway scale, labels, fix spacing and background feel readable.
-- [ ] Sequence arrivals and land on each physical strip.
-- [ ] Depart from both strips; follow requested fixes through successful handoff.
-- [ ] Try both 150° and 330° operation directions.
-- [ ] Confirm initial traffic buildup feels manageable.
-- [ ] Save, reload and resume a Riyadh game; also reopen a Heathrow checkpoint.
-- [ ] Approve M06 and enable Riyadh for the normal production selector.
+Owner acceptance recorded on 27 November 2026: “Play tested it as well, looks
+good. We can remove from play testing and publish as actual map.” The preview
+flag is now false, the normal selector includes Riyadh with DEBUG on or off,
+and no schema migration is required. M04, M05 and M06 are ready to close after
+merging this branch. This records application readiness, not a hosting deployment.

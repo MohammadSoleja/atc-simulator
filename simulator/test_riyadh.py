@@ -1,4 +1,4 @@
-"""Local-preview routing, airport facts and save compatibility for OERK."""
+"""Released-map routing, airport facts and save compatibility for OERK."""
 import copy
 import json
 from pathlib import Path
@@ -13,20 +13,25 @@ from .save_format import validate_snapshot
 
 @override_settings(DEBUG=True)
 class RiyadhTests(SimpleTestCase):
-    def test_local_preview_selection_and_help(self):
+    def test_released_map_selection_and_help(self):
         response = self.client.get('/play/?map=oerk')
         self.assertEqual(response.status_code, 200)
-        for text in ['OERK APPROACH', 'PLAYTEST', '15L / 33R', '15R / 33L', 'map-oerk.js', '2053', '7000 ft']:
+        for text in ['OERK APPROACH', '15L / 33R', '15R / 33L', 'map-oerk.js', '2053', '7000 ft']:
             self.assertContains(response, text)
         welcome = self.client.get('/')
         self.assertContains(welcome, 'value="oerk"')
-        self.assertContains(welcome, 'Playtest')
+        self.assertNotContains(welcome, 'Playtest')
+        self.assertNotContains(response, 'PLAYTEST')
 
     @override_settings(DEBUG=False)
-    def test_unapproved_map_stays_out_of_production(self):
-        self.assertEqual([a['id'] for a in available_airports()], ['egll'])
-        self.assertEqual(self.client.get('/play/?map=oerk').status_code, 404)
-        self.assertNotContains(self.client.get('/'), 'value="oerk"')
+    def test_approved_map_is_available_in_production(self):
+        self.assertEqual([a['id'] for a in available_airports()], ['egll', 'oerk'])
+        response = self.client.get('/play/?map=oerk')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'PLAYTEST')
+        welcome = self.client.get('/')
+        self.assertContains(welcome, 'value="oerk"')
+        self.assertNotContains(welcome, 'Playtest')
 
     def test_published_geometry_and_fix_sources(self):
         data = get_airport('oerk')
